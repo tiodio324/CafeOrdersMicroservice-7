@@ -1,0 +1,147 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  @include flex-column;
+  gap: $spacing-xl;
+}
+
+.header {
+  @include flex-between;
+  gap: $spacing-md;
+  
+  @include mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.title {
+  @include heading-1;
+  margin: 0;
+}
+
+.legend {
+  display: flex;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.loading,
+.empty {
+  @include flex-center;
+  padding: $spacing-3xl;
+  color: $color-text-muted;
+  font-size: $font-size-lg;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: $spacing-lg;
+}
+
+.tableCard {
+  @include flex-column;
+  gap: $spacing-md;
+  padding: $spacing-lg !important;
+  border-left: 4px solid;
+  
+  &.free {
+    border-left-color: $color-success;
+  }
+  
+  &.occupied {
+    border-left-color: $color-error;
+  }
+  
+  &.reserved {
+    border-left-color: $color-warning;
+  }
+  
+  &.maintenance {
+    border-left-color: $color-info;
+  }
+}
+
+.tableNumber {
+  @include flex-between;
+  gap: $spacing-sm;
+}
+
+.number {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  
+  &::before {
+    content: 'Стол ';
+    font-size: $font-size-md;
+    // font-weight: $font-weight-normal;
+    color: $color-text-muted;
+  }
+}
+
+.tableInfo {
+  @include flex-column;
+  gap: $spacing-xs;
+}
+
+.capacity {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.location {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  font-style: italic;
+}
+
+.orderInfo {
+  padding: $spacing-sm;
+  background: $color-warning-light;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-warning;
+  font-weight: $font-weight-medium;
+}
+
+.tableActions {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: auto;
+  padding-top: $spacing-md;
+  border-top: 1px solid $color-border-light;
+}
+
+.statusSelect {
+  flex: 1;
+}
+
+.form {
+  @include flex-column;
+  gap: $spacing-md;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}

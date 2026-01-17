@@ -1,0 +1,128 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  @include flex-column;
+  gap: $spacing-xl;
+}
+
+.header {
+  @include flex-between;
+  gap: $spacing-md;
+  
+  @include mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.title {
+  @include heading-1;
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.loading,
+.empty {
+  @include flex-center;
+  padding: $spacing-3xl;
+  color: $color-text-muted;
+  font-size: $font-size-lg;
+}
+
+.tableCard {
+  overflow: hidden;
+}
+
+.orderForm {
+  @include flex-column;
+  gap: $spacing-lg;
+}
+
+.menuSelect {
+  h4 {
+    margin: 0 0 $spacing-sm;
+    font-size: $font-size-md;
+    color: $color-text-secondary;
+  }
+}
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: $spacing-sm;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.menuItem {
+  display: flex;
+  justify-content: space-between;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-secondary;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  
+  &:hover {
+    background: $color-primary-lightest;
+    border-color: $color-primary-light;
+  }
+  
+  span:first-child {
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+  }
+  
+  span:last-child {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-primary;
+  }
+}
+
+.selectedItems {
+  background: $color-bg-tertiary;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  
+  h4 {
+    margin: 0 0 $spacing-sm;
+    font-size: $font-size-md;
+    color: $color-text-secondary;
+  }
+}
+
+.selectedItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-xs 0;
+  border-bottom: 1px solid $color-border-light;
+  
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.total {
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 2px solid $color-border-primary;
+  text-align: right;
+  font-size: $font-size-lg;
+  color: $color-primary;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}

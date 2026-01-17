@@ -1,0 +1,124 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  @include flex-column;
+  gap: $spacing-xl;
+}
+
+.header {
+  @include flex-between;
+  gap: $spacing-md;
+  
+  @include mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.title {
+  @include heading-1;
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  gap: $spacing-md;
+  
+  @include mobile {
+    flex-direction: column;
+  }
+}
+
+.searchInput {
+  flex: 1;
+  max-width: 400px;
+  
+  @include mobile {
+    max-width: 100%;
+  }
+}
+
+.categorySelect {
+  min-width: 200px;
+  
+  @include mobile {
+    min-width: 100%;
+  }
+}
+
+.loading,
+.empty {
+  @include flex-center;
+  padding: $spacing-3xl;
+  color: $color-text-muted;
+  font-size: $font-size-lg;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: $spacing-lg;
+}
+
+.menuCard {
+  @include flex-column;
+  gap: $spacing-sm;
+  padding: $spacing-lg !important;
+}
+
+.menuCardHeader {
+  @include flex-between;
+  gap: $spacing-sm;
+}
+
+.menuName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.menuDescription {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+  margin: 0;
+  line-height: $line-height-relaxed;
+}
+
+.menuMeta {
+  @include flex-between;
+  margin-top: auto;
+  padding-top: $spacing-md;
+  border-top: 1px solid $color-border-light;
+}
+
+.category {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.price {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.menuActions {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.form {
+  @include flex-column;
+  gap: $spacing-md;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}

@@ -1,0 +1,109 @@
+// ============================================
+// Global Colors - Cafe Warm Orange-Brown Theme
+// ============================================
+// This file contains all color variables used throughout the application.
+// Change colors here to update the entire site's color scheme.
+
+// Primary Cafe Palette
+$color-primary-darkest: #8B4513;      // Saddle brown - darkest
+$color-primary-dark: #A0522D;         // Sienna
+$color-primary: #CD853F;              // Peru - main cafe color
+$color-primary-medium: #D2691E;       // Chocolate
+$color-primary-light: #DEB887;        // Burlywood
+$color-primary-lighter: #F5DEB3;      // Wheat
+$color-primary-lightest: #FFF8DC;     // Cornsilk
+
+// Accent Colors
+$color-accent: #FF8C00;               // Dark orange accent
+$color-accent-light: #FFE4B5;         // Moccasin
+$color-accent-warm: #FF6347;          // Tomato - warm accent
+
+// Background Colors
+$color-bg-primary: #FFFAF0;           // Floral white
+$color-bg-secondary: #FFF5EE;         // Seashell
+$color-bg-tertiary: #FAEBD7;          // Antique white
+$color-bg-dark: #8B4513;              // Saddle brown
+
+// Text Colors
+$color-text-primary: #3E2723;         // Dark brown text
+$color-text-secondary: #5D4037;       // Medium brown
+$color-text-muted: #8D6E63;           // Light brown
+$color-text-light: #A1887F;           // Lighter brown
+$color-text-inverse: #FFFAF0;         // Light text on dark backgrounds
+
+// Status Colors
+$color-success: #4CAF50;              // Green for success
+$color-success-light: #E8F5E9;        // Light green bg
+$color-warning: #FF9800;              // Orange warning
+$color-warning-light: #FFF3E0;        // Light orange bg
+$color-error: #D32F2F;                // Red error
+$color-error-light: #FFEBEE;          // Light red bg
+$color-info: #1976D2;                 // Blue info
+$color-info-light: #E3F2FD;           // Light blue bg
+
+// Border Colors
+$color-border-primary: #D7CCC8;       // Light brown border
+$color-border-light: #EFEBE9;         // Very light border
+$color-border-dark: #A1887F;          // Dark border
+
+// Shadow Colors
+$color-shadow: rgba(62, 39, 35, 0.1);
+$color-shadow-medium: rgba(62, 39, 35, 0.15);
+$color-shadow-dark: rgba(62, 39, 35, 0.25);
+
+// Gradient Definitions
+$gradient-primary: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+$gradient-header: linear-gradient(180deg, $color-primary-darkest 0%, $color-primary-dark 100%);
+$gradient-card: linear-gradient(145deg, $color-bg-primary 0%, $color-bg-secondary 100%);
+
+// ============================================
+// CSS Custom Properties Export
+// ============================================
+:root {
+  // Primary
+  --color-primary-darkest: #{$color-primary-darkest};
+  --color-primary-dark: #{$color-primary-dark};
+  --color-primary: #{$color-primary};
+  --color-primary-medium: #{$color-primary-medium};
+  --color-primary-light: #{$color-primary-light};
+  --color-primary-lighter: #{$color-primary-lighter};
+  --color-primary-lightest: #{$color-primary-lightest};
+  
+  // Accent
+  --color-accent: #{$color-accent};
+  --color-accent-light: #{$color-accent-light};
+  --color-accent-warm: #{$color-accent-warm};
+  
+  // Background
+  --color-bg-primary: #{$color-bg-primary};
+  --color-bg-secondary: #{$color-bg-secondary};
+  --color-bg-tertiary: #{$color-bg-tertiary};
+  --color-bg-dark: #{$color-bg-dark};
+  
+  // Text
+  --color-text-primary: #{$color-text-primary};
+  --color-text-secondary: #{$color-text-secondary};
+  --color-text-muted: #{$color-text-muted};
+  --color-text-light: #{$color-text-light};
+  --color-text-inverse: #{$color-text-inverse};
+  
+  // Status
+  --color-success: #{$color-success};
+  --color-success-light: #{$color-success-light};
+  --color-warning: #{$color-warning};
+  --color-warning-light: #{$color-warning-light};
+  --color-error: #{$color-error};
+  --color-error-light: #{$color-error-light};
+  --color-info: #{$color-info};
+  --color-info-light: #{$color-info-light};
+  
+  // Border
+  --color-border-primary: #{$color-border-primary};
+  --color-border-light: #{$color-border-light};
+  --color-border-dark: #{$color-border-dark};
+  
+  // Shadow
+  --color-shadow: #{$color-shadow};
+  --color-shadow-medium: #{$color-shadow-medium};
+  --color-shadow-dark: #{$color-shadow-dark};
+}
