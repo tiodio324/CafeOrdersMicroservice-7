@@ -2,15 +2,16 @@
 @use '@/styles/variables' as *;
 @use '@/styles/mixins' as *;
 
+// Cafe-Orders: Grid карточки с жирными границами
 .form {
   @include flex-column;
-  gap: $spacing-lg;
+  gap: $spacing-xl;
 }
 
 .roleSelector {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: $spacing-md;
+  gap: $spacing-lg;
 
   @media (max-width: 420px) {
     grid-template-columns: 1fr;
@@ -20,54 +21,52 @@
 .roleButton {
   @include flex-column;
   @include flex-center;
-  gap: $spacing-sm;
-  padding: $spacing-lg;
-  background: $color-bg-secondary;
-  border: 2px solid $color-border-light;
+  gap: $spacing-md;
+  padding: $spacing-xl;
+  background: $color-bg-primary;
+  border: 3px solid $color-border-light;
   border-radius: $radius-lg;
   cursor: pointer;
-  transition: all $transition-fast;
+  transition: all $transition-base;
   
   svg {
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     color: $color-text-muted;
-    transition: color $transition-fast;
+    transition: all $transition-base;
   }
   
   span {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-medium;
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
     color: $color-text-secondary;
-    transition: color $transition-fast;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
   
   &:hover {
-    border-color: $color-primary-light;
-    background: $color-bg-tertiary;
+    border-color: $color-primary;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     
-    svg {
-      color: $color-primary;
-    }
+    svg { color: $color-primary; }
   }
   
   &.active {
     border-color: $color-primary;
     background: rgba($color-primary, 0.05);
+    box-shadow: 0 4px 16px rgba($color-primary, 0.2);
     
-    svg {
-      color: $color-primary;
-    }
-    
-    span {
-      color: $color-primary;
-    }
+    svg { color: $color-primary; }
+    span { color: $color-primary; }
   }
 }
 
-.hint {
-  text-align: center;
-  font-size: $font-size-xs;
-  color: $color-text-muted;
-  margin: 0;
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 2px solid $color-border-light;
 }

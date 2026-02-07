@@ -67,11 +67,15 @@ export const OrdersPage = observer(() => {
 
   const handleCreateOrder = async () => {
     if (selectedTableId && orderItems.length > 0) {
-      await createOrder({
+      const result = await createOrder({
         tableId: selectedTableId,
         items: orderItems,
       });
-      setIsModalOpen(false);
+      if (result) {
+        setIsModalOpen(false);
+        setSelectedTableId('');
+        setOrderItems([]);
+      }
     }
   };
 

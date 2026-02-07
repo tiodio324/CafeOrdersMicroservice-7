@@ -9,11 +9,12 @@
   left: 0;
   right: 0;
   height: $header-height;
-  padding: 0 $spacing-lg;
-  background: $gradient-header;
-  color: $color-text-inverse;
+  padding: 0 $spacing-2xl;
+  background: $color-bg-primary;
+  color: $color-text-primary;
   z-index: $z-fixed;
-  box-shadow: $shadow-lg;
+  border-bottom: 3px solid $color-primary;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   
   @include mobile {
     padding: 0 $spacing-md;
@@ -22,26 +23,27 @@
 
 .left {
   @include flex-start;
-  gap: $spacing-md;
+  gap: $spacing-lg;
 }
 
 .menuButton {
   display: none;
-  padding: $spacing-sm;
-  background: transparent;
+  padding: $spacing-md;
+  background: $color-primary;
   border: none;
   color: $color-text-inverse;
   cursor: pointer;
   border-radius: $radius-md;
-  transition: background $transition-fast;
+  transition: all $transition-fast;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: $color-primary-dark;
+    transform: scale(1.05);
   }
   
   svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
   
   @include mobile-tablet {
@@ -51,23 +53,44 @@
 
 .logo {
   @include flex-start;
-  gap: $spacing-sm;
+  gap: $spacing-md;
   text-decoration: none;
   color: inherit;
   cursor: pointer;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-lg;
+  transition: background $transition-fast;
+  
+  &:hover {
+    background: $color-bg-secondary;
+  }
 }
 
 .logoIcon {
-  width: 28px;
-  height: 28px;
-  color: $color-accent;
+  width: 32px;
+  height: 32px;
+  color: $color-primary;
 }
 
 .logoText {
   font-family: $font-family-primary;
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  letter-spacing: 0.5px;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  letter-spacing: -0.5px;
+  
+  @include mobile {
+    display: none;
+  }
+}
+
+.titleWrapper {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: $spacing-sm $spacing-xl;
+  background: $color-bg-secondary;
+  border-radius: $radius-full;
+  border: 2px solid $color-primary;
   
   @include mobile {
     display: none;
@@ -75,13 +98,17 @@
 }
 
 .title {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   font-family: $font-family-primary;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-medium;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
   margin: 0;
+  color: $color-primary;
+}
+
+.divider {
+  width: 2px;
+  height: 24px;
+  background: $color-border-primary;
   
   @include mobile {
     display: none;
@@ -100,10 +127,11 @@
 
 .role {
   font-size: $font-size-sm;
-  color: $color-primary-lighter;
-  padding: $spacing-xs $spacing-sm;
-  background: rgba(255, 255, 255, 0.1);
+  color: $color-text-inverse;
+  padding: $spacing-sm $spacing-lg;
+  background: $color-primary;
   border-radius: $radius-full;
+  font-weight: $font-weight-semibold;
   
   @include mobile {
     display: none;
@@ -111,10 +139,12 @@
 }
 
 .headerButton {
-  color: $color-accent !important;
-  border-color: $color-accent !important;
+  color: $color-primary !important;
+  border-color: $color-primary !important;
+  font-weight: $font-weight-semibold !important;
   
   &:hover {
-    background: rgba($color-accent, 0.1) !important;
+    background: $color-primary !important;
+    color: $color-text-inverse !important;
   }
 }

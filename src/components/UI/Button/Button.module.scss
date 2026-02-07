@@ -6,10 +6,11 @@
   @include button-base;
   position: relative;
   overflow: hidden;
+  font-weight: $font-weight-semibold;
   
   &:focus-visible {
-    outline: 2px solid $color-primary;
-    outline-offset: 2px;
+    outline: 3px solid $color-primary;
+    outline-offset: 3px;
   }
 }
 
@@ -17,80 +18,87 @@
 .primary {
   background: $color-primary;
   color: $color-text-inverse;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid $color-primary;
+  box-shadow: 0 4px 12px rgba($color-primary, 0.3);
   
   &:hover:not(:disabled) {
     background: $color-primary-dark;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
+    border-color: $color-primary-dark;
+    box-shadow: 0 6px 20px rgba($color-primary, 0.4);
+    transform: translateY(-2px);
   }
   
   &:active:not(:disabled) {
-    transform: translateY(1px);
-    background: $color-primary-darkest;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba($color-primary, 0.3);
   }
 }
 
 .secondary {
-  background: $color-bg-secondary;
+  background: transparent;
   color: $color-primary;
-  border: 1px solid $color-border-primary;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 2px solid $color-primary;
   
   &:hover:not(:disabled) {
-    background: $color-bg-tertiary;
-    border-color: $color-primary-light;
+    background: $color-primary;
+    color: $color-text-inverse;
+    box-shadow: 0 4px 12px rgba($color-primary, 0.3);
   }
 }
 
 .ghost {
   background: transparent;
   color: $color-text-secondary;
+  border: 2px solid transparent;
   
   &:hover:not(:disabled) {
     background: $color-bg-tertiary;
     color: $color-text-primary;
+    border-color: $color-border-primary;
   }
 }
 
 .danger {
   background: $color-error;
   color: $color-text-inverse;
+  border: 2px solid $color-error;
   
   &:hover:not(:disabled) {
     background: darken($color-error, 10%);
-    box-shadow: $shadow-md;
+    border-color: darken($color-error, 10%);
+    box-shadow: 0 4px 12px rgba($color-error, 0.3);
   }
 }
 
 .success {
   background: $color-success;
   color: $color-text-inverse;
+  border: 2px solid $color-success;
   
   &:hover:not(:disabled) {
     background: darken($color-success, 10%);
-    box-shadow: $shadow-md;
+    border-color: darken($color-success, 10%);
+    box-shadow: 0 4px 12px rgba($color-success, 0.3);
   }
 }
 
 // Sizes
 .sm {
-  padding: 8px 14px;
+  padding: 10px 18px;
   font-size: $font-size-sm;
-  border-radius: 20px;
+  border-radius: $radius-md;
 }
 
 .md {
-  padding: 11px 22px;
+  padding: 12px 24px;
   font-size: $font-size-base;
-  border-radius: 24px;
+  border-radius: $radius-md;
 }
 
 .lg {
   padding: 14px 28px;
   font-size: $font-size-md;
-  border-radius: 28px;
+  border-radius: $radius-lg;
 }
 
 // States

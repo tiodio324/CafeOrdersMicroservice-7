@@ -2,86 +2,59 @@
 @use '@/styles/variables' as *;
 @use '@/styles/mixins' as *;
 
+// Cafe-Orders: Карточки с жирной верхней границей
 .card {
-  @include card;
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-
-// Variants
-.default {
   background: $color-bg-primary;
+  border-radius: $radius-lg;
+  border: 1px solid $color-border-light;
+  border-top: 4px solid $color-primary;
+  overflow: hidden;
+  transition: all $transition-base;
 }
 
-.outlined {
-  background: transparent;
-  box-shadow: none;
+.default { background: $color-bg-primary; }
+.outlined { 
+  background: transparent; 
   border: 2px solid $color-border-primary;
+  border-top: 4px solid $color-primary;
+}
+.elevated { 
+  background: $color-bg-primary; 
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-.elevated {
-  background: $color-bg-primary;
-  box-shadow: $shadow-lg;
-}
+.padding-none .content { padding: 0; }
+.padding-sm .content { padding: $spacing-sm; }
+.padding-md .content { padding: $spacing-md; }
+.padding-lg .content { padding: $spacing-lg; }
 
-// Padding
-.padding-none {
-  .content {
-    padding: 0;
-  }
-}
-
-.padding-sm {
-  .content {
-    padding: $spacing-sm;
-  }
-}
-
-.padding-md {
-  .content {
-    padding: $spacing-md;
-  }
-}
-
-.padding-lg {
-  .content {
-    padding: $spacing-lg;
-  }
-}
-
-// Hoverable
 .hoverable {
   cursor: pointer;
   
   &:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    border-top-color: $color-primary-dark;
   }
 }
 
-// Sections
 .header {
-  padding: $spacing-md;
-  border-bottom: 1px solid $color-border-light;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-secondary;
+  border-bottom: 2px solid $color-border-light;
+  font-weight: $font-weight-bold;
   
-  &:empty {
-    display: none;
-  }
+  &:empty { display: none; }
 }
 
-.content {
-  flex: 1;
-}
+.content { flex: 1; }
 
 .footer {
-  padding: $spacing-md;
-  border-top: 1px solid $color-border-light;
-  background: $color-bg-secondary;
-  border-radius: 0 0 $radius-lg $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-tertiary;
+  border-top: 2px solid $color-border-light;
   
-  &:empty {
-    display: none;
-  }
+  &:empty { display: none; }
 }

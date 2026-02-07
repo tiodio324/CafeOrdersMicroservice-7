@@ -2,19 +2,23 @@
 @use '@/styles/variables' as *;
 @use '@/styles/mixins' as *;
 
+// Cafe-Orders: Жирные верхние границы, ресторанный стиль
 .page {
-  @include flex-column;
+  display: flex;
+  flex-direction: column;
   gap: $spacing-2xl;
 }
 
-// Welcome Section
 .welcome {
-  @include flex-between;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: $spacing-xl;
   padding: $spacing-2xl;
-  background: $gradient-primary;
-  border-radius: $radius-xl;
-  color: $color-text-inverse;
+  background: $color-bg-primary;
+  border-radius: $radius-lg;
+  border: 1px solid $color-border-light;
+  border-top: 6px solid $color-primary;
   position: relative;
   overflow: hidden;
   
@@ -36,6 +40,8 @@
   font-size: $font-size-3xl;
   font-weight: $font-weight-bold;
   margin: 0 0 $spacing-md;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   
   @include mobile {
     font-size: $font-size-2xl;
@@ -44,39 +50,30 @@
 
 .welcomeText {
   font-size: $font-size-md;
-  opacity: 0.9;
   margin: 0 0 $spacing-lg;
   line-height: $line-height-relaxed;
-  color: $color-text-inverse;
+  color: $color-text-secondary;
 }
 
 .welcomeDecor {
   position: absolute;
-  right: -40px;
-  top: -40px;
-  width: 280px;
-  height: 280px;
-  color: $color-primary-lighter;
-  opacity: 0.3;
+  right: -20px;
+  top: -20px;
+  width: 200px;
+  height: 200px;
+  color: $color-primary;
+  opacity: 0.06;
   
-  @include mobile {
-    display: none;
-  }
+  @include mobile { display: none; }
 }
 
-// Stats Section
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: $spacing-lg;
   
-  @include tablet {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  @include mobile {
-    grid-template-columns: 1fr;
-  }
+  @include tablet { grid-template-columns: repeat(2, 1fr); }
+  @include mobile { grid-template-columns: 1fr; }
 }
 
 .statCard {
@@ -84,59 +81,41 @@
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-lg !important;
-  border-left: 4px solid;
+  border-top: 4px solid;
+  border-radius: $radius-lg !important;
   
   &.primary {
-    border-left-color: $color-primary;
-    
-    .statIcon {
-      color: $color-primary;
-      background: rgba($color-primary, 0.1);
-    }
+    border-top-color: $color-primary;
+    .statIcon { color: $color-primary; background: rgba($color-primary, 0.1); }
   }
-  
   &.success {
-    border-left-color: $color-success;
-    
-    .statIcon {
-      color: $color-success;
-      background: rgba($color-success, 0.1);
-    }
+    border-top-color: $color-success;
+    .statIcon { color: $color-success; background: rgba($color-success, 0.1); }
   }
-  
   &.warning {
-    border-left-color: $color-warning;
-    
-    .statIcon {
-      color: $color-warning;
-      background: rgba($color-warning, 0.1);
-    }
+    border-top-color: $color-warning;
+    .statIcon { color: $color-warning; background: rgba($color-warning, 0.1); }
   }
-  
   &.info {
-    border-left-color: $color-info;
-    
-    .statIcon {
-      color: $color-info;
-      background: rgba($color-info, 0.1);
-    }
+    border-top-color: $color-info;
+    .statIcon { color: $color-info; background: rgba($color-info, 0.1); }
   }
 }
 
 .statIcon {
-  @include flex-center;
-  width: 48px;
-  height: 48px;
-  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-lg;
   
-  svg {
-    width: 24px;
-    height: 24px;
-  }
+  svg { width: 28px; height: 28px; }
 }
 
 .statContent {
-  @include flex-column;
+  display: flex;
+  flex-direction: column;
 }
 
 .statValue {
@@ -149,12 +128,18 @@
 .statTitle {
   font-size: $font-size-sm;
   color: $color-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-// Quick Actions Section
 .sectionTitle {
-  @include heading-2;
+  font-family: $font-family-primary;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
   margin: 0 0 $spacing-lg;
+  padding-bottom: $spacing-sm;
+  border-bottom: 3px solid $color-primary;
+  display: inline-block;
 }
 
 .actionCards {
@@ -164,36 +149,34 @@
 }
 
 .actionCard {
-  @include flex-column;
+  display: flex;
+  flex-direction: column;
   align-items: flex-start;
   gap: $spacing-sm;
   padding: $spacing-xl !important;
+  border-top: 4px solid $color-primary;
+  transition: all $transition-base;
   
-  h3 {
-    font-size: $font-size-lg;
-    font-weight: $font-weight-semibold;
-    color: $color-text-primary;
-    margin: 0;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   }
   
-  p {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    margin: 0;
-  }
+  h3 { font-size: $font-size-lg; font-weight: $font-weight-bold; color: $color-text-primary; margin: 0; }
+  p { font-size: $font-size-sm; color: $color-text-muted; margin: 0; }
 }
 
 .actionIcon {
-  @include flex-center;
-  width: 48px;
-  height: 48px;
-  background: $color-bg-tertiary;
-  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: $color-bg-secondary;
+  border-radius: $radius-lg;
+  border: 2px solid $color-border-light;
   color: $color-primary;
   margin-bottom: $spacing-sm;
   
-  svg {
-    width: 24px;
-    height: 24px;
-  }
+  svg { width: 28px; height: 28px; }
 }

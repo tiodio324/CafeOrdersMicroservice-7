@@ -33,6 +33,7 @@ export const Header = observer(() => {
             )}
           </svg>
         </button>
+        <div className={styles.divider} />
         <div
           className={styles.logo}
           onClick={() => navigate('home')}
@@ -49,12 +50,15 @@ export const Header = observer(() => {
         </div>
       </div>
 
-      <h1 className={styles.title}>{pageTitle}</h1>
+      <div className={styles.titleWrapper}>
+        <h1 className={styles.title}>{pageTitle}</h1>
+      </div>
 
       <div className={styles.right}>
         {isAuthenticated ? (
           <div className={styles.userInfo}>
             <span className={styles.role}>{getRoleName(currentRole)}</span>
+            <div className={styles.divider} />
             <Button variant="ghost" size="sm" onClick={logout} className={styles.headerButton}>
               Выйти
             </Button>

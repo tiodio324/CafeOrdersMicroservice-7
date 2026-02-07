@@ -12,7 +12,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.5);
     z-index: $z-modal-backdrop - 1;
   }
 }
@@ -24,7 +24,7 @@
   bottom: 0;
   width: $sidebar-width;
   background: $color-bg-primary;
-  border-right: 1px solid $color-border-light;
+  border-right: 3px solid $color-primary;
   z-index: $z-sticky;
   display: flex;
   flex-direction: column;
@@ -68,7 +68,7 @@
 
 .nav {
   flex: 1;
-  padding: $spacing-md;
+  padding: $spacing-lg $spacing-md;
   overflow-y: auto;
   @include scrollbar-styled;
 }
@@ -79,17 +79,18 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
+  gap: $spacing-sm;
 }
 
 .navItem {
   @include flex-start;
   gap: $spacing-md;
   width: 100%;
-  padding: $spacing-md;
+  padding: $spacing-lg $spacing-md;
   background: transparent;
   border: none;
-  border-radius: 14px;
+  border-radius: 0;
+  border-left: 4px solid transparent;
   color: $color-text-secondary;
   font-family: $font-family-secondary;
   font-size: $font-size-base;
@@ -101,15 +102,17 @@
   &:hover {
     background: $color-bg-secondary;
     color: $color-text-primary;
+    border-left-color: $color-primary-light;
   }
   
   &.active {
-    background: $color-primary;
-    color: $color-text-inverse;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    background: rgba($color-primary, 0.08);
+    color: $color-primary-dark;
+    border-left-color: $color-primary;
+    font-weight: $font-weight-semibold;
     
     .icon {
-      color: $color-text-inverse;
+      color: $color-primary;
     }
   }
 }
@@ -119,6 +122,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
   color: $color-primary-light;
   transition: color $transition-fast;
   
@@ -134,19 +139,16 @@
 }
 
 .footer {
-  padding: $spacing-md;
-  border-top: 1px solid $color-border-light;
+  padding: $spacing-lg;
+  border-top: 3px solid $color-primary;
   text-align: center;
   transition: opacity $transition-fast;
+  background: $color-bg-secondary;
 }
 
 .copyright {
   font-size: $font-size-xs;
   color: $color-text-muted;
   margin: 0;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  font-weight: $font-weight-medium;
 }

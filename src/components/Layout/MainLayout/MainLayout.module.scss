@@ -32,7 +32,7 @@
 
 .content {
   @include container;
-  padding-top: $spacing-lg;
+  padding-top: $spacing-xl;
   padding-bottom: $spacing-2xl;
   
   @include mobile {

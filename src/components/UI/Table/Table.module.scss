@@ -6,8 +6,8 @@
   width: 100%;
   overflow-x: auto;
   @include scrollbar-styled;
-  border-radius: 16px;
-  border: none;
+  border-radius: 12px;
+  border: 2px solid $color-border-light;
   background: $color-bg-primary;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
@@ -20,21 +20,24 @@
 }
 
 .thead {
-  background: $color-bg-tertiary;
-  border-bottom: 2px solid $color-border-primary;
+  background: $color-bg-secondary;
+  border-bottom: 3px solid $color-primary;
 }
 
 .th {
-  padding: $spacing-md;
-  font-weight: $font-weight-semibold;
+  padding: $spacing-lg $spacing-md;
+  font-weight: $font-weight-bold;
   color: $color-text-primary;
   text-align: left;
   white-space: nowrap;
+  text-transform: uppercase;
+  font-size: $font-size-sm;
+  letter-spacing: 0.5px;
 }
 
 .tbody {
   .tr {
-    border-bottom: 1px solid $color-border-light;
+    border-bottom: 2px solid $color-border-light;
     
     &:last-child {
       border-bottom: none;
@@ -43,7 +46,7 @@
 }
 
 .td {
-  padding: $spacing-md;
+  padding: $spacing-lg $spacing-md;
   color: $color-text-secondary;
   vertical-align: middle;
 }
@@ -58,7 +61,8 @@
 // Hoverable
 .hoverable {
   .tbody .tr:hover {
-    background: $color-accent-light;
+    background: rgba($color-primary, 0.05);
+    border-left: 4px solid $color-primary;
   }
 }
 
