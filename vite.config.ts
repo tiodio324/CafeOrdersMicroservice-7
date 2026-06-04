@@ -5,7 +5,6 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/CafeOrdersMicroservice-7/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
