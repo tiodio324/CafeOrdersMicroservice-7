@@ -13,6 +13,11 @@ import {
   getTableStatusLabel,
 } from '@/types';
 import styles from './AdminPage.module.scss';
+import {
+  validateCategoryForm,
+  validateMenuItemForm,
+  validateTableForm,
+} from '@/utils/validators';
 
 type AdminTab = 'menu' | 'categories' | 'tables';
 type ModalType = 'category' | 'menu' | 'table' | null;
@@ -76,11 +81,18 @@ export const AdminPage = observer(() => {
     location: '',
   });
 
+  const [categoryErrors, setCategoryErrors] = useState<Record<string, string>>({});
+  const [menuErrors, setMenuErrors] = useState<Record<string, string>>({});
+  const [tableErrors, setTableErrors] = useState<Record<string, string>>({});
+
   const closeModal = () => {
     setModalType(null);
     setEditingCategory(null);
     setEditingMenuItem(null);
     setEditingTable(null);
+    setCategoryErrors({});
+    setMenuErrors({});
+    setTableErrors({});
   };
 
   const handleOpenCategoryModal = (category?: Category) => {
@@ -99,6 +111,7 @@ export const AdminPage = observer(() => {
         sortOrder: categories.length,
       });
     }
+    setCategoryErrors({});
     setModalType('category');
   };
 
@@ -122,6 +135,7 @@ export const AdminPage = observer(() => {
         price: 0,
       });
     }
+    setMenuErrors({});
     setModalType('menu');
   };
 
@@ -145,34 +159,59 @@ export const AdminPage = observer(() => {
         location: '',
       });
     }
+    setTableErrors({});
     setModalType('table');
   };
 
   const handleSubmitCategory = async () => {
-    if (editingCategory) {
-      await updateCategory(editingCategory.id, categoryForm);
-    } else {
-      await createCategory(categoryForm);
+    const validation = validateCategoryForm(categoryForm);
+    if (!validation.valid) {
+      setCategoryErrors(validation.errors);
+      return;
     }
-    closeModal();
+
+    setCategoryErrors({});
+    const success = editingCategory
+      ? await updateCategory(editingCategory.id, categoryForm)
+      : await createCategory(categoryForm);
+
+    if (success) {
+      closeModal();
+    }
   };
 
   const handleSubmitMenu = async () => {
-    if (editingMenuItem) {
-      await updateMenuItem(editingMenuItem.id, menuForm);
-    } else {
-      await createMenuItem(menuForm);
+    const validation = validateMenuItemForm(menuForm);
+    if (!validation.valid) {
+      setMenuErrors(validation.errors);
+      return;
     }
-    closeModal();
+
+    setMenuErrors({});
+    const success = editingMenuItem
+      ? await updateMenuItem(editingMenuItem.id, menuForm)
+      : await createMenuItem(menuForm);
+
+    if (success) {
+      closeModal();
+    }
   };
 
   const handleSubmitTable = async () => {
-    if (editingTable) {
-      await updateTable(editingTable.id, tableForm);
-    } else {
-      await createTable(tableForm);
+    const validation = validateTableForm(tableForm);
+    if (!validation.valid) {
+      setTableErrors(validation.errors);
+      return;
     }
-    closeModal();
+
+    setTableErrors({});
+    const success = editingTable
+      ? await updateTable(editingTable.id, tableForm)
+      : await createTable(tableForm);
+
+    if (success) {
+      closeModal();
+    }
   };
 
   const handleDeleteCategory = async (id: string) => {
@@ -345,13 +384,22 @@ export const AdminPage = observer(() => {
           <Input
             label="Название"
             value={categoryForm.name}
-            onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+            onChange={(e) => {
+              setCategoryForm({ ...categoryForm, name: e.target.value });
+              if (categoryErrors.name) setCategoryErrors({ ...categoryErrors, name: '' });
+            }}
+            error={categoryErrors.name}
             required
           />
           <Input
             label="Описание"
             value={categoryForm.description || ''}
-            onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
+            onChange={(e) => {
+              setCategoryForm({ ...categoryForm, description: e.target.value });
+              if (categoryErrors.description) setCategoryErrors({ ...categoryErrors, description: '' });
+            }}
+            error={categoryErrors.description}
+            required
           />
           <Input
             label="Порядок сортировки"
@@ -379,26 +427,45 @@ export const AdminPage = observer(() => {
           <Input
             label="Название"
             value={menuForm.name}
-            onChange={(e) => setMenuForm({ ...menuForm, name: e.target.value })}
+            onChange={(e) => {
+              setMenuForm({ ...menuForm, name: e.target.value });
+              if (menuErrors.name) setMenuErrors({ ...menuErrors, name: '' });
+            }}
+            error={menuErrors.name}
             required
           />
           <Input
             label="Описание"
             value={menuForm.description}
-            onChange={(e) => setMenuForm({ ...menuForm, description: e.target.value })}
+            onChange={(e) => {
+              setMenuForm({ ...menuForm, description: e.target.value });
+              if (menuErrors.description) setMenuErrors({ ...menuErrors, description: '' });
+            }}
+            error={menuErrors.description}
+            required
           />
           <Select
             label="Категория"
             options={activeCategories.map(c => ({ value: c.id, label: c.name }))}
             value={menuForm.categoryId}
-            onChange={(e) => setMenuForm({ ...menuForm, categoryId: e.target.value })}
+            onChange={(e) => {
+              setMenuForm({ ...menuForm, categoryId: e.target.value });
+              if (menuErrors.categoryId) setMenuErrors({ ...menuErrors, categoryId: '' });
+            }}
+            error={menuErrors.categoryId}
             required
           />
           <Input
             label="Цена (₽)"
             type="number"
+            min={0}
+            step={0.01}
             value={menuForm.price}
-            onChange={(e) => setMenuForm({ ...menuForm, price: parseFloat(e.target.value) || 0 })}
+            onChange={(e) => {
+              setMenuForm({ ...menuForm, price: parseFloat(e.target.value) || 0 });
+              if (menuErrors.price) setMenuErrors({ ...menuErrors, price: '' });
+            }}
+            error={menuErrors.price}
             required
           />
           <div className={styles.formActions}>
@@ -421,15 +488,25 @@ export const AdminPage = observer(() => {
           <Input
             label="Номер столика"
             type="number"
+            min={1}
             value={tableForm.number}
-            onChange={(e) => setTableForm({ ...tableForm, number: parseInt(e.target.value) || 0 })}
+            onChange={(e) => {
+              setTableForm({ ...tableForm, number: parseInt(e.target.value) || 0 });
+              if (tableErrors.number) setTableErrors({ ...tableErrors, number: '' });
+            }}
+            error={tableErrors.number}
             required
           />
           <Input
             label="Вместимость"
             type="number"
+            min={1}
             value={tableForm.capacity}
-            onChange={(e) => setTableForm({ ...tableForm, capacity: parseInt(e.target.value) || 1 })}
+            onChange={(e) => {
+              setTableForm({ ...tableForm, capacity: parseInt(e.target.value) || 0 });
+              if (tableErrors.capacity) setTableErrors({ ...tableErrors, capacity: '' });
+            }}
+            error={tableErrors.capacity}
             required
           />
           <Select

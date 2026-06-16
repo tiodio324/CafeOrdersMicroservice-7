@@ -20,7 +20,10 @@ export interface Order {
   status: OrderStatus;
   totalAmount: number;
   notes?: string;
+  /** Логин официанта или admin */
   createdBy: string;
+  /** Отображаемое имя официанта */
+  createdByName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,4 +63,8 @@ export const getOrderStatusColor = (status: OrderStatus): string => {
 // Helper to calculate order total
 export const calculateOrderTotal = (items: OrderItem[]): number => {
   return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+};
+
+export const getOrderCreatorLabel = (order: Order): string => {
+  return order.createdByName || order.createdBy;
 };

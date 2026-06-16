@@ -17,6 +17,11 @@ import {
 } from '@/types';
 import FirebaseService from '@/firebase';
 import { authStore } from './AuthStore';
+import {
+  validateCategoryForm,
+  validateMenuItemForm,
+  validateTableForm,
+} from '@/utils/validators';
 
 export class DataStore {
   // Data collections
@@ -82,15 +87,27 @@ export class DataStore {
       .sort((a, b) => a.number - b.number);
   }
 
+  get visibleOrders(): Order[] {
+    if (authStore.isAdmin) {
+      return this.orders;
+    }
+
+    if (authStore.isWaiter && authStore.user.username) {
+      return this.orders.filter(o => o.createdBy === authStore.user.username);
+    }
+
+    return [];
+  }
+
   get activeOrders(): Order[] {
-    return this.orders
+    return this.visibleOrders
       .filter(o => o.status !== 'cancelled' && o.status !== 'paid')
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   get todayOrders(): Order[] {
     const today = new Date().toISOString().split('T')[0];
-    return this.orders.filter(o => o.createdAt.startsWith(today));
+    return this.visibleOrders.filter(o => o.createdAt.startsWith(today));
   }
 
   get menuItemsByCategory(): Record<string, MenuItem[]> {
@@ -123,7 +140,7 @@ export class DataStore {
   };
 
   getOrdersForTable = (tableId: string): Order[] => {
-    return this.orders.filter(o => o.tableId === tableId && o.status !== 'paid' && o.status !== 'cancelled');
+    return this.visibleOrders.filter(o => o.tableId === tableId && o.status !== 'paid' && o.status !== 'cancelled');
   };
 
   // ============================================
@@ -238,6 +255,9 @@ export class DataStore {
   createMenuItem = async (data: MenuItemFormData): Promise<MenuItem | null> => {
     if (!authStore.canManageMenu()) return null;
 
+    const validation = validateMenuItemForm(data);
+    if (!validation.valid) return null;
+
     const now = new Date().toISOString();
     const menuItem: MenuItem = {
       id: uuidv4(),
@@ -266,9 +286,22 @@ export class DataStore {
     const index = this.menuItems.findIndex(m => m.id === id);
     if (index === -1) return false;
 
+    const existing = this.menuItems[index];
+    const merged: MenuItemFormData = {
+      name: data.name ?? existing.name,
+      description: data.description ?? existing.description,
+      categoryId: data.categoryId ?? existing.categoryId,
+      price: data.price ?? existing.price,
+      imageUrl: data.imageUrl ?? existing.imageUrl,
+      isAvailable: data.isAvailable ?? existing.isAvailable,
+    };
+
+    const validation = validateMenuItemForm(merged);
+    if (!validation.valid) return false;
+
     const updated = {
-      ...this.menuItems[index],
-      ...data,
+      ...existing,
+      ...merged,
       updatedAt: new Date().toISOString(),
     };
 
@@ -309,6 +342,9 @@ export class DataStore {
   createCategory = async (data: CategoryFormData): Promise<Category | null> => {
     if (!authStore.canManageCategories()) return null;
 
+    const validation = validateCategoryForm(data);
+    if (!validation.valid) return null;
+
     const now = new Date().toISOString();
     const category: Category = {
       id: uuidv4(),
@@ -337,9 +373,20 @@ export class DataStore {
     const index = this.categories.findIndex(c => c.id === id);
     if (index === -1) return false;
 
+    const existing = this.categories[index];
+    const merged: CategoryFormData = {
+      name: data.name ?? existing.name,
+      description: data.description ?? existing.description,
+      icon: data.icon ?? existing.icon,
+      sortOrder: data.sortOrder ?? existing.sortOrder,
+    };
+
+    const validation = validateCategoryForm(merged);
+    if (!validation.valid) return false;
+
     const updated = {
-      ...this.categories[index],
-      ...data,
+      ...existing,
+      ...merged,
       updatedAt: new Date().toISOString(),
     };
 
@@ -380,6 +427,9 @@ export class DataStore {
   createTable = async (data: TableFormData): Promise<Table | null> => {
     if (!authStore.canManageTables()) return null;
 
+    const validation = validateTableForm(data);
+    if (!validation.valid) return null;
+
     const now = new Date().toISOString();
     const table: Table = {
       id: uuidv4(),
@@ -408,9 +458,20 @@ export class DataStore {
     const index = this.tables.findIndex(t => t.id === id);
     if (index === -1) return false;
 
+    const existing = this.tables[index];
+    const merged: TableFormData = {
+      number: data.number ?? existing.number,
+      capacity: data.capacity ?? existing.capacity,
+      status: data.status ?? existing.status,
+      location: data.location ?? existing.location,
+    };
+
+    const validation = validateTableForm(merged);
+    if (!validation.valid) return false;
+
     const updated = {
-      ...this.tables[index],
-      ...data,
+      ...existing,
+      ...merged,
       updatedAt: new Date().toISOString(),
     };
 
@@ -471,7 +532,8 @@ export class DataStore {
       status: 'pending',
       totalAmount: calculateOrderTotal(items),
       notes: data.notes || '',
-      createdBy: authStore.currentRole,
+      createdBy: authStore.user.username || authStore.currentRole,
+      createdByName: authStore.user.displayName,
       createdAt: now,
       updatedAt: now,
     };
@@ -495,6 +557,11 @@ export class DataStore {
 
     const index = this.orders.findIndex(o => o.id === id);
     if (index === -1) return false;
+
+    const order = this.orders[index];
+    if (!authStore.isAdmin && order.createdBy !== authStore.user.username) {
+      return false;
+    }
 
     const updated = {
       ...this.orders[index],

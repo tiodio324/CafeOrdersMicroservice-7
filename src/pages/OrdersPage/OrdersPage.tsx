@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, authStore } from '@/store';
-import { Card, Button, Select, Badge, Modal, Table } from '@/components/UI';
-import { Order, OrderStatus, getOrderStatusLabel, getOrderStatusColor, formatPrice } from '@/types';
+import { Card, Button, Select, Badge, Modal, Table, type TableColumn } from '@/components/UI';
+import { Order, OrderStatus, getOrderStatusLabel, getOrderStatusColor, formatPrice, getOrderCreatorLabel } from '@/types';
 import styles from './OrdersPage.module.scss';
 
 export const OrdersPage = observer(() => {
   const { 
-    orders,
+    visibleOrders,
     activeOrders,
     activeTables,
     filteredMenuItems,
@@ -15,7 +15,7 @@ export const OrdersPage = observer(() => {
     createOrder,
     updateOrderStatus,
   } = dataStore;
-  const { isWaiter } = authStore;
+  const { isWaiter, isAdmin } = authStore;
   
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,8 +25,8 @@ export const OrdersPage = observer(() => {
   const filteredOrders = statusFilter === 'active' 
     ? activeOrders 
     : statusFilter === 'all' 
-      ? orders 
-      : orders.filter(o => o.status === statusFilter);
+      ? visibleOrders 
+      : visibleOrders.filter(o => o.status === statusFilter);
 
   const statusOptions = [
     { value: 'active', label: 'Активные' },
@@ -91,8 +91,13 @@ export const OrdersPage = observer(() => {
     return flow[status];
   };
 
-  const columns = [
+  const columns: TableColumn<Order>[] = [
     { key: 'tableNumber', title: 'Стол', render: (order: Order) => `Стол ${order.tableNumber}` },
+    ...(isAdmin ? [{
+      key: 'createdBy',
+      title: 'Официант',
+      render: (order: Order) => getOrderCreatorLabel(order),
+    }] : []),
     { key: 'items', title: 'Позиции', render: (order: Order) => `${order.items.length} поз.` },
     { key: 'totalAmount', title: 'Сумма', render: (order: Order) => formatPrice(order.totalAmount) },
     { 
@@ -116,13 +121,16 @@ export const OrdersPage = observer(() => {
       key: 'actions',
       title: 'Действия',
       render: (order: Order) => {
+        if (!isAdmin && order.createdBy !== authStore.user.username) {
+          return '—';
+        }
         const nextStatus = getNextStatus(order.status);
         return nextStatus ? (
           <Button size="sm" onClick={() => handleStatusChange(order.id, nextStatus)}>
             {getOrderStatusLabel(nextStatus)}
           </Button>
-        ) : <></>;
-      }
+        ) : '—';
+      },
     });
   }
 
