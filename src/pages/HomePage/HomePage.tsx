@@ -26,7 +26,7 @@ const StatCard = ({
 
 export const HomePage = observer(() => {
   const { menuItems, categories, tables, orders, loadAllData, menuItemsLoading } = dataStore;
-  const { isWaiter, isAdmin } = authStore;
+  const { isWaiter, isAdmin, isAuthenticated, canViewOrders, canViewTables } = authStore;
   const { navigate } = navigationStore;
 
   useEffect(() => {
@@ -92,42 +92,46 @@ export const HomePage = observer(() => {
             </svg>
           }
         />
-        <StatCard 
-          title="Активных заказов"
-          value={activeOrders.length}
-          color="warning"
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-              <polyline points="14,2 14,8 20,8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-          }
-        />
-        <StatCard 
-          title="Свободных столов"
-          value={`${freeTables.length}/${activeTables.length}`}
-          color="info"
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="4" width="18" height="12" rx="2" />
-              <line x1="3" y1="20" x2="7" y2="16" />
-              <line x1="21" y1="20" x2="17" y2="16" />
-            </svg>
-          }
-        />
-        <StatCard 
-          title="Выручка сегодня"
-          value={`${todayRevenue.toFixed(0)} ₽`}
-          color="success"
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-            </svg>
-          }
-        />
+        {isAuthenticated && (
+          <>
+            <StatCard
+              title="Активных заказов"
+              value={activeOrders.length}
+              color="warning"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                  <polyline points="14,2 14,8 20,8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              }
+            />
+            <StatCard
+              title="Свободных столов"
+              value={`${freeTables.length}/${activeTables.length}`}
+              color="info"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="12" rx="2" />
+                  <line x1="3" y1="20" x2="7" y2="16" />
+                  <line x1="21" y1="20" x2="17" y2="16" />
+                </svg>
+              }
+            />
+            <StatCard
+              title="Выручка сегодня"
+              value={`${todayRevenue.toFixed(0)} ₽`}
+              color="success"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="1" x2="12" y2="23" />
+                  <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                </svg>
+              }
+            />
+          </>
+        )}
       </section>
 
       <section className={styles.quickActions}>
@@ -148,44 +152,48 @@ export const HomePage = observer(() => {
             <Badge variant="info">{activeCategories.length} категорий</Badge>
           </Card>
 
-          <Card 
-            className={styles.actionCard} 
-            hoverable 
-            onClick={() => navigate('orders')}
-          >
-            <div className={styles.actionIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                <polyline points="14,2 14,8 20,8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </div>
-            <h3>Заказы</h3>
-            <p>Управление заказами</p>
-            {activeOrders.length > 0 && (
-              <Badge variant="warning">{activeOrders.length} активных</Badge>
-            )}
-          </Card>
+          {canViewOrders() && (
+            <Card
+              className={styles.actionCard}
+              hoverable
+              onClick={() => navigate('orders')}
+            >
+              <div className={styles.actionIcon}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                  <polyline points="14,2 14,8 20,8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
+              <h3>Заказы</h3>
+              <p>Управление заказами</p>
+              {activeOrders.length > 0 && (
+                <Badge variant="warning">{activeOrders.length} активных</Badge>
+              )}
+            </Card>
+          )}
 
-          <Card 
-            className={styles.actionCard} 
-            hoverable 
-            onClick={() => navigate('tables')}
-          >
-            <div className={styles.actionIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="12" rx="2" />
-                <line x1="3" y1="20" x2="7" y2="16" />
-                <line x1="21" y1="20" x2="17" y2="16" />
-              </svg>
-            </div>
-            <h3>Столики</h3>
-            <p>Схема зала и бронирование</p>
-            <Badge variant={freeTables.length > 0 ? 'success' : 'error'}>
-              {freeTables.length} свободно
-            </Badge>
-          </Card>
+          {canViewTables() && (
+            <Card
+              className={styles.actionCard}
+              hoverable
+              onClick={() => navigate('tables')}
+            >
+              <div className={styles.actionIcon}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="12" rx="2" />
+                  <line x1="3" y1="20" x2="7" y2="16" />
+                  <line x1="21" y1="20" x2="17" y2="16" />
+                </svg>
+              </div>
+              <h3>Столики</h3>
+              <p>Схема зала и бронирование</p>
+              <Badge variant={freeTables.length > 0 ? 'success' : 'error'}>
+                {freeTables.length} свободно
+              </Badge>
+            </Card>
+          )}
 
           {isAdmin && (
             <Card 

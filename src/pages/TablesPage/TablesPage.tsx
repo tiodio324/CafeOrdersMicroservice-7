@@ -1,71 +1,17 @@
-import { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, authStore } from '@/store';
-import { Card, Button, Badge, Modal, Input, Select } from '@/components/UI';
-import { Table, TableFormData, TableStatus, getTableStatusLabel, getTableStatusColor } from '@/types';
+import { Card, Badge, Select } from '@/components/UI';
+import { TableStatus, getTableStatusLabel, getTableStatusColor } from '@/types';
 import styles from './TablesPage.module.scss';
 
 export const TablesPage = observer(() => {
-  const { 
-    activeTables, 
+  const {
+    activeTables,
     tablesLoading,
-    createTable,
     updateTable,
-    deleteTable,
-    getOrdersForTable
+    getOrdersForTable,
   } = dataStore;
-  const { isAdmin, isWaiter } = authStore;
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTable, setEditingTable] = useState<Table | null>(null);
-  const [formData, setFormData] = useState<TableFormData>({
-    number: 0,
-    capacity: 4,
-    status: 'free',
-    location: '',
-  });
-
-  const handleOpenModal = (table?: Table) => {
-    if (table) {
-      setEditingTable(table);
-      setFormData({
-        number: table.number,
-        capacity: table.capacity,
-        status: table.status,
-        location: table.location,
-      });
-    } else {
-      setEditingTable(null);
-      const maxNumber = Math.max(0, ...activeTables.map(t => t.number));
-      setFormData({
-        number: maxNumber + 1,
-        capacity: 4,
-        status: 'free',
-        location: '',
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingTable(null);
-  };
-
-  const handleSubmit = async () => {
-    if (editingTable) {
-      await updateTable(editingTable.id, formData);
-    } else {
-      await createTable(formData);
-    }
-    handleCloseModal();
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Вы уверены, что хотите удалить этот столик?')) {
-      await deleteTable(id);
-    }
-  };
+  const { isAdmin } = authStore;
 
   const handleStatusChange = async (tableId: string, status: TableStatus) => {
     await updateTable(tableId, { status });
@@ -82,11 +28,6 @@ export const TablesPage = observer(() => {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Столики</h1>
-        {isAdmin && (
-          <Button variant="primary" onClick={() => handleOpenModal()}>
-            Добавить столик
-          </Button>
-        )}
       </div>
 
       <div className={styles.legend}>
@@ -108,8 +49,8 @@ export const TablesPage = observer(() => {
           {activeTables.map(table => {
             const tableOrders = getOrdersForTable(table.id);
             return (
-              <Card 
-                key={table.id} 
+              <Card
+                key={table.id}
                 className={`${styles.tableCard} ${styles[table.status]}`}
               >
                 <div className={styles.tableNumber}>
@@ -118,7 +59,7 @@ export const TablesPage = observer(() => {
                     {getTableStatusLabel(table.status)}
                   </Badge>
                 </div>
-                
+
                 <div className={styles.tableInfo}>
                   <div className={styles.capacity}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -138,7 +79,7 @@ export const TablesPage = observer(() => {
                   </div>
                 )}
 
-                {isWaiter && (
+                {isAdmin && (
                   <div className={styles.tableActions}>
                     <Select
                       options={statusOptions}
@@ -146,16 +87,6 @@ export const TablesPage = observer(() => {
                       onChange={(e) => handleStatusChange(table.id, e.target.value as TableStatus)}
                       className={styles.statusSelect}
                     />
-                    {isAdmin && (
-                      <>
-                        <Button size="sm" variant="secondary" onClick={() => handleOpenModal(table)}>
-                          ✏️
-                        </Button>
-                        <Button size="sm" variant="danger" onClick={() => handleDelete(table.id)}>
-                          🗑️
-                        </Button>
-                      </>
-                    )}
                   </div>
                 )}
               </Card>
@@ -163,49 +94,6 @@ export const TablesPage = observer(() => {
           })}
         </div>
       )}
-
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title={editingTable ? 'Редактировать столик' : 'Добавить столик'}
-      >
-        <div className={styles.form}>
-          <Input
-            label="Номер столика"
-            type="number"
-            value={formData.number}
-            onChange={(e) => setFormData({ ...formData, number: parseInt(e.target.value) || 0 })}
-            required
-          />
-          <Input
-            label="Вместимость"
-            type="number"
-            value={formData.capacity}
-            onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })}
-            required
-          />
-          <Select
-            label="Статус"
-            options={statusOptions}
-            value={formData.status || 'free'}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as TableStatus })}
-          />
-          <Input
-            label="Расположение"
-            value={formData.location || ''}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            placeholder="Например: У окна, Терраса"
-          />
-          <div className={styles.formActions}>
-            <Button variant="secondary" onClick={handleCloseModal}>
-              Отмена
-            </Button>
-            <Button variant="primary" onClick={handleSubmit}>
-              {editingTable ? 'Сохранить' : 'Добавить'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 });

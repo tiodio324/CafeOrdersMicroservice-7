@@ -41,14 +41,16 @@ export const PAGES_CONFIG: Record<PageId, PageConfig> = {
     id: 'orders',
     title: 'Заказы',
     icon: 'receipt',
-    requiresAuth: false,
+    requiresAuth: true,
+    requiredRole: 'waiter',
     showInNav: true,
   },
   tables: {
     id: 'tables',
     title: 'Столики',
     icon: 'table',
-    requiresAuth: false,
+    requiresAuth: true,
+    requiredRole: 'waiter',
     showInNav: true,
   },
   admin: {

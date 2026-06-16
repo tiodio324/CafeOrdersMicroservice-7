@@ -8,17 +8,25 @@ import styles from './LoginModal.module.scss';
 export const LoginModal = observer(() => {
   const { loginModalOpen, closeLoginModal, login, loginError, isLoading } = authStore;
   const [selectedRole, setSelectedRole] = useState<Exclude<UserRole, 'guest'>>('waiter');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(selectedRole, password);
+    await login(selectedRole, password, selectedRole === 'waiter' ? username : undefined);
   };
 
   const handleClose = () => {
     closeLoginModal();
+    setUsername('');
     setPassword('');
     setSelectedRole('waiter');
+  };
+
+  const handleRoleChange = (role: Exclude<UserRole, 'guest'>) => {
+    setSelectedRole(role);
+    setUsername('');
+    setPassword('');
   };
 
   return (
@@ -32,7 +40,7 @@ export const LoginModal = observer(() => {
           <button
             type="button"
             className={`${styles.roleButton} ${selectedRole === 'waiter' ? styles.active : ''}`}
-            onClick={() => setSelectedRole('waiter')}
+            onClick={() => handleRoleChange('waiter')}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -44,7 +52,7 @@ export const LoginModal = observer(() => {
           <button
             type="button"
             className={`${styles.roleButton} ${selectedRole === 'admin' ? styles.active : ''}`}
-            onClick={() => setSelectedRole('admin')}
+            onClick={() => handleRoleChange('admin')}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="3" />
@@ -54,15 +62,27 @@ export const LoginModal = observer(() => {
           </button>
         </div>
 
+        {selectedRole === 'waiter' && (
+          <Input
+            label="Логин"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Введите логин официанта"
+            error={loginError || undefined}
+            disabled={isLoading}
+            autoFocus
+          />
+        )}
+
         <Input
           type="password"
           label="Пароль"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Введите пароль"
-          error={loginError || undefined}
+          error={selectedRole === 'admin' ? loginError || undefined : undefined}
           disabled={isLoading}
-          autoFocus
+          autoFocus={selectedRole === 'admin'}
         />
 
         <div className={styles.actions}>
@@ -77,7 +97,7 @@ export const LoginModal = observer(() => {
           <Button
             type="submit"
             variant="primary"
-            disabled={isLoading || !password}
+            disabled={isLoading || !password || (selectedRole === 'waiter' && !username.trim())}
           >
             {isLoading ? 'Вход...' : 'Войти'}
           </Button>

@@ -1,27 +1,48 @@
 import { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, navigationStore } from '@/store';
-import { Card, Button, Input, Modal, Table } from '@/components/UI';
-import { Category, CategoryFormData, MenuItem, Table as TableType } from '@/types';
+import { Card, Button, Input, Select, Modal, Table } from '@/components/UI';
+import {
+  Category,
+  CategoryFormData,
+  MenuItem,
+  MenuItemFormData,
+  Table as TableType,
+  TableFormData,
+  TableStatus,
+  getTableStatusLabel,
+} from '@/types';
 import styles from './AdminPage.module.scss';
 
 type AdminTab = 'menu' | 'categories' | 'tables';
+type ModalType = 'category' | 'menu' | 'table' | null;
+
+const TABLE_STATUS_OPTIONS: Array<{ value: TableStatus; label: string }> = [
+  { value: 'free', label: 'Свободен' },
+  { value: 'occupied', label: 'Занят' },
+  { value: 'reserved', label: 'Забронирован' },
+  { value: 'maintenance', label: 'Обслуживание' },
+];
 
 export const AdminPage = observer(() => {
   const { currentPage } = navigationStore;
-  const { 
-    menuItems, 
-    categories, 
+  const {
+    menuItems,
+    categories,
     tables,
     activeCategories,
     createCategory,
     updateCategory,
     deleteCategory,
+    createMenuItem,
+    updateMenuItem,
     deleteMenuItem,
+    createTable,
+    updateTable,
     deleteTable,
-    getCategoryById
+    getCategoryById,
   } = dataStore;
-  
+
   const getInitialTab = (): AdminTab => {
     if (currentPage === 'admin-menu') return 'menu';
     if (currentPage === 'admin-categories') return 'categories';
@@ -30,45 +51,128 @@ export const AdminPage = observer(() => {
   };
 
   const [activeTab, setActiveTab] = useState<AdminTab>(getInitialTab());
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>(null);
+
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState<CategoryFormData>({
+  const [categoryForm, setCategoryForm] = useState<CategoryFormData>({
     name: '',
     description: '',
     sortOrder: 0,
   });
 
-  const handleOpenModal = (category?: Category) => {
+  const [editingMenuItem, setEditingMenuItem] = useState<MenuItem | null>(null);
+  const [menuForm, setMenuForm] = useState<MenuItemFormData>({
+    name: '',
+    description: '',
+    categoryId: '',
+    price: 0,
+  });
+
+  const [editingTable, setEditingTable] = useState<TableType | null>(null);
+  const [tableForm, setTableForm] = useState<TableFormData>({
+    number: 0,
+    capacity: 4,
+    status: 'free',
+    location: '',
+  });
+
+  const closeModal = () => {
+    setModalType(null);
+    setEditingCategory(null);
+    setEditingMenuItem(null);
+    setEditingTable(null);
+  };
+
+  const handleOpenCategoryModal = (category?: Category) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({
+      setCategoryForm({
         name: category.name,
         description: category.description,
         sortOrder: category.sortOrder,
       });
     } else {
       setEditingCategory(null);
-      setFormData({
+      setCategoryForm({
         name: '',
         description: '',
         sortOrder: categories.length,
       });
     }
-    setIsModalOpen(true);
+    setModalType('category');
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingCategory(null);
-  };
-
-  const handleSubmit = async () => {
-    if (editingCategory) {
-      await updateCategory(editingCategory.id, formData);
+  const handleOpenMenuModal = (item?: MenuItem) => {
+    if (item) {
+      setEditingMenuItem(item);
+      setMenuForm({
+        name: item.name,
+        description: item.description,
+        categoryId: item.categoryId,
+        price: item.price,
+        imageUrl: item.imageUrl,
+        isAvailable: item.isAvailable,
+      });
     } else {
-      await createCategory(formData);
+      setEditingMenuItem(null);
+      setMenuForm({
+        name: '',
+        description: '',
+        categoryId: activeCategories[0]?.id || '',
+        price: 0,
+      });
     }
-    handleCloseModal();
+    setModalType('menu');
+  };
+
+  const handleOpenTableModal = (table?: TableType) => {
+    if (table) {
+      setEditingTable(table);
+      setTableForm({
+        number: table.number,
+        capacity: table.capacity,
+        status: table.status,
+        location: table.location,
+      });
+    } else {
+      setEditingTable(null);
+      const activeTables = tables.filter(t => t.isActive);
+      const maxNumber = Math.max(0, ...activeTables.map(t => t.number));
+      setTableForm({
+        number: maxNumber + 1,
+        capacity: 4,
+        status: 'free',
+        location: '',
+      });
+    }
+    setModalType('table');
+  };
+
+  const handleSubmitCategory = async () => {
+    if (editingCategory) {
+      await updateCategory(editingCategory.id, categoryForm);
+    } else {
+      await createCategory(categoryForm);
+    }
+    closeModal();
+  };
+
+  const handleSubmitMenu = async () => {
+    if (editingMenuItem) {
+      await updateMenuItem(editingMenuItem.id, menuForm);
+    } else {
+      await createMenuItem(menuForm);
+    }
+    closeModal();
+  };
+
+  const handleSubmitTable = async () => {
+    if (editingTable) {
+      await updateTable(editingTable.id, tableForm);
+    } else {
+      await createTable(tableForm);
+    }
+    closeModal();
   };
 
   const handleDeleteCategory = async (id: string) => {
@@ -95,14 +199,19 @@ export const AdminPage = observer(() => {
     { key: 'price', title: 'Цена', render: (item: MenuItem) => `${item.price} ₽` },
     { key: 'isAvailable', title: 'Доступно', render: (item: MenuItem) => item.isAvailable ? 'Да' : 'Нет' },
     { key: 'isActive', title: 'Активно', render: (item: MenuItem) => item.isActive ? 'Да' : 'Нет' },
-    { 
-      key: 'actions', 
+    {
+      key: 'actions',
       title: 'Действия',
       render: (item: MenuItem) => (
-        <Button size="sm" variant="danger" onClick={() => handleDeleteMenuItem(item.id)}>
-          Удалить
-        </Button>
-      )
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button size="sm" variant="secondary" onClick={() => handleOpenMenuModal(item)}>
+            Редактировать
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => handleDeleteMenuItem(item.id)}>
+            Удалить
+          </Button>
+        </div>
+      ),
     },
   ];
 
@@ -111,36 +220,41 @@ export const AdminPage = observer(() => {
     { key: 'description', title: 'Описание', render: (cat: Category) => cat.description || '-' },
     { key: 'sortOrder', title: 'Порядок' },
     { key: 'isActive', title: 'Активно', render: (cat: Category) => cat.isActive ? 'Да' : 'Нет' },
-    { 
-      key: 'actions', 
+    {
+      key: 'actions',
       title: 'Действия',
       render: (cat: Category) => (
         <div style={{ display: 'flex', gap: '8px' }}>
-          <Button size="sm" variant="secondary" onClick={() => handleOpenModal(cat)}>
+          <Button size="sm" variant="secondary" onClick={() => handleOpenCategoryModal(cat)}>
             Редактировать
           </Button>
           <Button size="sm" variant="danger" onClick={() => handleDeleteCategory(cat.id)}>
             Удалить
           </Button>
         </div>
-      )
+      ),
     },
   ];
 
   const tableColumns = [
     { key: 'number', title: 'Номер', render: (t: TableType) => `Стол ${t.number}` },
     { key: 'capacity', title: 'Вместимость', render: (t: TableType) => `${t.capacity} мест` },
-    { key: 'status', title: 'Статус' },
+    { key: 'status', title: 'Статус', render: (t: TableType) => getTableStatusLabel(t.status) },
     { key: 'location', title: 'Расположение', render: (t: TableType) => t.location || '-' },
     { key: 'isActive', title: 'Активно', render: (t: TableType) => t.isActive ? 'Да' : 'Нет' },
-    { 
-      key: 'actions', 
+    {
+      key: 'actions',
       title: 'Действия',
       render: (t: TableType) => (
-        <Button size="sm" variant="danger" onClick={() => handleDeleteTable(t.id)}>
-          Удалить
-        </Button>
-      )
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button size="sm" variant="secondary" onClick={() => handleOpenTableModal(t)}>
+            Редактировать
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => handleDeleteTable(t.id)}>
+            Удалить
+          </Button>
+        </div>
+      ),
     },
   ];
 
@@ -151,19 +265,19 @@ export const AdminPage = observer(() => {
       </div>
 
       <div className={styles.tabs}>
-        <button 
+        <button
           className={`${styles.tab} ${activeTab === 'menu' ? styles.active : ''}`}
           onClick={() => setActiveTab('menu')}
         >
           Меню ({menuItems.filter(m => m.isActive).length})
         </button>
-        <button 
+        <button
           className={`${styles.tab} ${activeTab === 'categories' ? styles.active : ''}`}
           onClick={() => setActiveTab('categories')}
         >
           Категории ({activeCategories.length})
         </button>
-        <button 
+        <button
           className={`${styles.tab} ${activeTab === 'tables' ? styles.active : ''}`}
           onClick={() => setActiveTab('tables')}
         >
@@ -172,19 +286,26 @@ export const AdminPage = observer(() => {
       </div>
 
       {activeTab === 'menu' && (
-        <Card className={styles.tableCard}>
-          <Table
-            columns={menuColumns}
-            data={menuItems}
-            keyField="id"
-          />
-        </Card>
+        <>
+          <div className={styles.actions}>
+            <Button variant="primary" onClick={() => handleOpenMenuModal()}>
+              Добавить позицию
+            </Button>
+          </div>
+          <Card className={styles.tableCard}>
+            <Table
+              columns={menuColumns}
+              data={menuItems}
+              keyField="id"
+            />
+          </Card>
+        </>
       )}
 
       {activeTab === 'categories' && (
         <>
           <div className={styles.actions}>
-            <Button variant="primary" onClick={() => handleOpenModal()}>
+            <Button variant="primary" onClick={() => handleOpenCategoryModal()}>
               Добавить категорию
             </Button>
           </div>
@@ -199,44 +320,136 @@ export const AdminPage = observer(() => {
       )}
 
       {activeTab === 'tables' && (
-        <Card className={styles.tableCard}>
-          <Table
-            columns={tableColumns}
-            data={tables}
-            keyField="id"
-          />
-        </Card>
+        <>
+          <div className={styles.actions}>
+            <Button variant="primary" onClick={() => handleOpenTableModal()}>
+              Добавить столик
+            </Button>
+          </div>
+          <Card className={styles.tableCard}>
+            <Table
+              columns={tableColumns}
+              data={tables}
+              keyField="id"
+            />
+          </Card>
+        </>
       )}
 
       <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        isOpen={modalType === 'category'}
+        onClose={closeModal}
         title={editingCategory ? 'Редактировать категорию' : 'Добавить категорию'}
       >
         <div className={styles.form}>
           <Input
             label="Название"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            value={categoryForm.name}
+            onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
             required
           />
           <Input
             label="Описание"
-            value={formData.description || ''}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            value={categoryForm.description || ''}
+            onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
           />
           <Input
             label="Порядок сортировки"
             type="number"
-            value={formData.sortOrder || 0}
-            onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
+            value={categoryForm.sortOrder || 0}
+            onChange={(e) => setCategoryForm({ ...categoryForm, sortOrder: parseInt(e.target.value) || 0 })}
           />
           <div className={styles.formActions}>
-            <Button variant="secondary" onClick={handleCloseModal}>
+            <Button variant="secondary" onClick={closeModal}>
               Отмена
             </Button>
-            <Button variant="primary" onClick={handleSubmit}>
+            <Button variant="primary" onClick={handleSubmitCategory}>
               {editingCategory ? 'Сохранить' : 'Добавить'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={modalType === 'menu'}
+        onClose={closeModal}
+        title={editingMenuItem ? 'Редактировать позицию' : 'Добавить позицию'}
+      >
+        <div className={styles.form}>
+          <Input
+            label="Название"
+            value={menuForm.name}
+            onChange={(e) => setMenuForm({ ...menuForm, name: e.target.value })}
+            required
+          />
+          <Input
+            label="Описание"
+            value={menuForm.description}
+            onChange={(e) => setMenuForm({ ...menuForm, description: e.target.value })}
+          />
+          <Select
+            label="Категория"
+            options={activeCategories.map(c => ({ value: c.id, label: c.name }))}
+            value={menuForm.categoryId}
+            onChange={(e) => setMenuForm({ ...menuForm, categoryId: e.target.value })}
+            required
+          />
+          <Input
+            label="Цена (₽)"
+            type="number"
+            value={menuForm.price}
+            onChange={(e) => setMenuForm({ ...menuForm, price: parseFloat(e.target.value) || 0 })}
+            required
+          />
+          <div className={styles.formActions}>
+            <Button variant="secondary" onClick={closeModal}>
+              Отмена
+            </Button>
+            <Button variant="primary" onClick={handleSubmitMenu}>
+              {editingMenuItem ? 'Сохранить' : 'Добавить'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={modalType === 'table'}
+        onClose={closeModal}
+        title={editingTable ? 'Редактировать столик' : 'Добавить столик'}
+      >
+        <div className={styles.form}>
+          <Input
+            label="Номер столика"
+            type="number"
+            value={tableForm.number}
+            onChange={(e) => setTableForm({ ...tableForm, number: parseInt(e.target.value) || 0 })}
+            required
+          />
+          <Input
+            label="Вместимость"
+            type="number"
+            value={tableForm.capacity}
+            onChange={(e) => setTableForm({ ...tableForm, capacity: parseInt(e.target.value) || 1 })}
+            required
+          />
+          <Select
+            label="Статус"
+            options={TABLE_STATUS_OPTIONS}
+            value={tableForm.status || 'free'}
+            onChange={(e) => setTableForm({ ...tableForm, status: e.target.value as TableStatus })}
+          />
+          <Input
+            label="Расположение"
+            value={tableForm.location || ''}
+            onChange={(e) => setTableForm({ ...tableForm, location: e.target.value })}
+            placeholder="Например: У окна, Терраса"
+          />
+          <div className={styles.formActions}>
+            <Button variant="secondary" onClick={closeModal}>
+              Отмена
+            </Button>
+            <Button variant="primary" onClick={handleSubmitTable}>
+              {editingTable ? 'Сохранить' : 'Добавить'}
             </Button>
           </div>
         </div>

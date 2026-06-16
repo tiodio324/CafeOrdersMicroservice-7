@@ -15,20 +15,7 @@ export class NavigationStore {
   get navigationItems(): PageConfig[] {
     return Object.values(PAGES_CONFIG).filter(page => {
       if (!page.showInNav) return false;
-      
-      if (page.requiresAuth && !authStore.isAuthenticated) {
-        return false;
-      }
-      
-      if (page.requiredRole === 'admin' && !authStore.isAdmin) {
-        return false;
-      }
-      
-      if (page.requiredRole === 'waiter' && !authStore.isWaiter) {
-        return false;
-      }
-      
-      return true;
+      return this.canAccessPage(page.id);
     });
   }
 
@@ -42,29 +29,68 @@ export class NavigationStore {
     return this.currentPageConfig.title;
   }
 
+  canAccessPage = (pageId: PageId): boolean => {
+    const pageConfig = PAGES_CONFIG[pageId];
+    if (!pageConfig) return false;
+
+    if (pageConfig.requiresAuth && !authStore.isAuthenticated) {
+      return false;
+    }
+
+    if (pageConfig.requiredRole === 'admin' && !authStore.isAdmin) {
+      return false;
+    }
+
+    if (pageConfig.requiredRole === 'waiter' && !authStore.isWaiter) {
+      return false;
+    }
+
+    if (pageId === 'orders' && !authStore.canViewOrders()) {
+      return false;
+    }
+
+    if (pageId === 'tables' && !authStore.canViewTables()) {
+      return false;
+    }
+
+    return true;
+  };
+
+  ensureAuthorizedPage = (): void => {
+    if (!this.canAccessPage(this.currentPage)) {
+      this.currentPage = authStore.canViewMenu() ? 'menu' : 'home';
+    }
+  };
+
   // Navigate to a page
   navigate = (pageId: PageId): void => {
     const pageConfig = PAGES_CONFIG[pageId];
-    
+
     if (!pageConfig) {
       console.warn(`Page ${pageId} not found`);
       return;
     }
 
-    // Check auth requirements
     if (pageConfig.requiresAuth && !authStore.isAuthenticated) {
       authStore.openLoginModal();
       return;
     }
 
-    // Check role requirements
     if (pageConfig.requiredRole === 'admin' && !authStore.isAdmin) {
       console.warn('Admin access required');
       return;
     }
 
     if (pageConfig.requiredRole === 'waiter' && !authStore.isWaiter) {
-      console.warn('Waiter access required');
+      authStore.openLoginModal();
+      return;
+    }
+
+    if (pageId === 'orders' && !authStore.canViewOrders()) {
+      return;
+    }
+
+    if (pageId === 'tables' && !authStore.canViewTables()) {
       return;
     }
 

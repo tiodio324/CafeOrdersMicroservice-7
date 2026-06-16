@@ -1,26 +1,42 @@
 import { makeAutoObservable } from 'mobx';
 import { User, UserRole, ROLE_PERMISSIONS, RolePermissions } from '@/types';
 
-// Storage keys for authentication persistence
 const AUTH_STORAGE_KEY = 'cafe_orders_auth';
 const SESSION_EXPIRY_KEY = 'cafe_orders_session_expiry';
 
-// Session duration in milliseconds (24 hours)
 const SESSION_DURATION = 24 * 60 * 60 * 1000;
 
-const AUTH_CREDENTIALS: Record<Exclude<UserRole, 'guest'>, string> = {
-  waiter: 'waiter2026-cafe',
-  admin: 'admin2026-cafe',
-};
+export interface WaiterAccount {
+  username: string;
+  password: string;
+  displayName: string;
+}
+
+export const WAITER_ACCOUNTS: WaiterAccount[] = [
+  { username: 'anna', password: 'anna2026-cafe', displayName: 'Анна Иванова' },
+  { username: 'boris', password: 'boris2026-cafe', displayName: 'Борис Петров' },
+  { username: 'elena', password: 'elena2026-cafe', displayName: 'Елена Сидорова' },
+  { username: 'dmitry', password: 'dmitry2026-cafe', displayName: 'Дмитрий Козлов' },
+  { username: 'maria', password: 'maria2026-cafe', displayName: 'Мария Новикова' },
+  { username: 'sergey', password: 'sergey2026-cafe', displayName: 'Сергей Морозов' },
+  { username: 'olga', password: 'olga2026-cafe', displayName: 'Ольга Волкова' },
+  { username: 'alexey', password: 'alexey2026-cafe', displayName: 'Алексей Соколов' },
+  { username: 'natalia', password: 'natalia2026-cafe', displayName: 'Наталья Лебедева' },
+  { username: 'ivan', password: 'ivan2026-cafe', displayName: 'Иван Кузнецов' },
+];
+
+const ADMIN_PASSWORD = 'admin2026-cafe';
 
 interface StoredAuthState {
   role: UserRole;
+  username?: string;
+  displayName?: string;
   expiry: number;
 }
 
 export class AuthStore {
   private _user: User = {
-    role: 'guest'
+    role: 'guest',
   };
 
   loginModalOpen = false;
@@ -32,7 +48,6 @@ export class AuthStore {
     this.loadAuthState();
   }
 
-  // Getters
   get user(): User {
     return this._user;
   }
@@ -57,7 +72,6 @@ export class AuthStore {
     return this._user.role;
   }
 
-  // Permission checkers
   canViewMenu = (): boolean => this.permissions.canViewMenu;
   canViewOrders = (): boolean => this.permissions.canViewOrders;
   canViewTables = (): boolean => this.permissions.canViewTables;
@@ -68,7 +82,6 @@ export class AuthStore {
   canManageCategories = (): boolean => this.permissions.canManageCategories;
   canAccessAdmin = (): boolean => this.permissions.canAccessAdmin;
 
-  // Check if user has required role
   hasRole = (requiredRole: UserRole): boolean => {
     const roleHierarchy: Record<UserRole, number> = {
       guest: 0,
@@ -78,7 +91,6 @@ export class AuthStore {
     return roleHierarchy[this._user.role] >= roleHierarchy[requiredRole];
   };
 
-  // Load auth state from storage
   private loadAuthState = (): void => {
     try {
       const storedData = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -88,11 +100,13 @@ export class AuthStore {
         const authState: StoredAuthState = JSON.parse(storedData);
         const expiry = parseInt(expiryData, 10);
 
-        // Check if session is still valid
         if (Date.now() < expiry && authState.role !== 'guest') {
-          this._user = { role: authState.role };
+          this._user = {
+            role: authState.role,
+            username: authState.username,
+            displayName: authState.displayName,
+          };
         } else {
-          // Session expired, clear storage
           this.clearAuthStorage();
         }
       }
@@ -102,12 +116,13 @@ export class AuthStore {
     }
   };
 
-  // Save auth state to storage
   private saveAuthState = (): void => {
     try {
       if (this._user.role !== 'guest') {
         const authState: StoredAuthState = {
           role: this._user.role,
+          username: this._user.username,
+          displayName: this._user.displayName,
           expiry: Date.now() + SESSION_DURATION,
         };
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState));
@@ -120,7 +135,6 @@ export class AuthStore {
     }
   };
 
-  // Clear auth storage
   private clearAuthStorage = (): void => {
     try {
       localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -130,7 +144,6 @@ export class AuthStore {
     }
   };
 
-  // Modal controls
   openLoginModal = (): void => {
     this.loginModalOpen = true;
     this.loginError = null;
@@ -142,25 +155,55 @@ export class AuthStore {
     this.isLoading = false;
   };
 
-  // Login with password
-  login = async (role: Exclude<UserRole, 'guest'>, password: string): Promise<boolean> => {
+  login = async (
+    role: Exclude<UserRole, 'guest'>,
+    password: string,
+    username?: string,
+  ): Promise<boolean> => {
     this.isLoading = true;
     this.loginError = null;
 
     try {
-      // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Validate credentials
-      if (AUTH_CREDENTIALS[role] === password) {
-        this._user = { role };
+      if (role === 'waiter') {
+        if (!username?.trim()) {
+          this.loginError = 'Введите логин';
+          return false;
+        }
+
+        const account = WAITER_ACCOUNTS.find(
+          a => a.username === username.trim() && a.password === password,
+        );
+
+        if (account) {
+          this._user = {
+            role: 'waiter',
+            username: account.username,
+            displayName: account.displayName,
+          };
+          this.saveAuthState();
+          this.closeLoginModal();
+          return true;
+        }
+
+        this.loginError = 'Неверный логин или пароль';
+        return false;
+      }
+
+      if (role === 'admin' && password === ADMIN_PASSWORD) {
+        this._user = {
+          role: 'admin',
+          username: 'admin',
+          displayName: 'Администратор',
+        };
         this.saveAuthState();
         this.closeLoginModal();
         return true;
-      } else {
-        this.loginError = 'Неверный пароль';
-        return false;
       }
+
+      this.loginError = 'Неверный пароль';
+      return false;
     } catch (error) {
       this.loginError = 'Ошибка авторизации';
       console.error('Login error:', error);
@@ -170,18 +213,15 @@ export class AuthStore {
     }
   };
 
-  // Logout
   logout = (): void => {
     this._user = { role: 'guest' };
     this.clearAuthStorage();
     this.loginError = null;
   };
 
-  // Clear login error
   clearError = (): void => {
     this.loginError = null;
   };
 }
 
-// Singleton instance
 export const authStore = new AuthStore();

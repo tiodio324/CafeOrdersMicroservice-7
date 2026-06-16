@@ -6,6 +6,8 @@ export type UserRole = 'guest' | 'waiter' | 'admin';
 
 export interface User {
   role: UserRole;
+  username?: string;
+  displayName?: string;
 }
 
 export interface RolePermissions {
@@ -23,8 +25,8 @@ export interface RolePermissions {
 export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
   guest: {
     canViewMenu: true,
-    canViewOrders: true,
-    canViewTables: true,
+    canViewOrders: false,
+    canViewTables: false,
     canCreateOrders: false,
     canEditOrders: false,
     canManageMenu: false,
