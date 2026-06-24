@@ -10,7 +10,8 @@ export type PageId =
   | 'admin'
   | 'admin-menu'
   | 'admin-categories'
-  | 'admin-tables';
+  | 'admin-tables'
+  | 'admin-employees';
 
 export interface PageConfig {
   id: PageId;
@@ -83,6 +84,15 @@ export const PAGES_CONFIG: Record<PageId, PageConfig> = {
     id: 'admin-tables',
     title: 'Управление столиками',
     icon: 'table-settings',
+    requiresAuth: true,
+    requiredRole: 'admin',
+    showInNav: false,
+    parentId: 'admin',
+  },
+  'admin-employees': {
+    id: 'admin-employees',
+    title: 'Управление сотрудниками',
+    icon: 'employees',
     requiresAuth: true,
     requiredRole: 'admin',
     showInNav: false,

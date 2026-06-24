@@ -324,9 +324,9 @@ export class DataStore {
     if (index === -1) return false;
 
     try {
-      await FirebaseService.updateData(`menuItems/${id}`, { isActive: false });
+      await FirebaseService.removeData(`menuItems/${id}`);
       runInAction(() => {
-        this.menuItems[index].isActive = false;
+        this.menuItems.splice(index, 1);
       });
       return true;
     } catch (error) {
@@ -409,9 +409,9 @@ export class DataStore {
     if (index === -1) return false;
 
     try {
-      await FirebaseService.updateData(`categories/${id}`, { isActive: false });
+      await FirebaseService.removeData(`categories/${id}`);
       runInAction(() => {
-        this.categories[index].isActive = false;
+        this.categories.splice(index, 1);
       });
       return true;
     } catch (error) {
@@ -494,9 +494,9 @@ export class DataStore {
     if (index === -1) return false;
 
     try {
-      await FirebaseService.updateData(`tables/${id}`, { isActive: false });
+      await FirebaseService.removeData(`tables/${id}`);
       runInAction(() => {
-        this.tables[index].isActive = false;
+        this.tables.splice(index, 1);
       });
       return true;
     } catch (error) {

@@ -1,10 +1,14 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, runInAction } from 'mobx';
+import { v4 as uuidv4 } from 'uuid';
 import { User, UserRole, ROLE_PERMISSIONS, RolePermissions } from '@/types';
+import FirebaseService from '@/firebase';
 
 const AUTH_STORAGE_KEY = 'cafe_orders_auth';
 const SESSION_EXPIRY_KEY = 'cafe_orders_session_expiry';
 
 const SESSION_DURATION = 24 * 60 * 60 * 1000;
+
+const WAITER_ACCOUNTS_PATH = 'officiantAccounts';
 
 export interface WaiterAccount {
   username: string;
@@ -12,20 +16,33 @@ export interface WaiterAccount {
   displayName: string;
 }
 
-export const WAITER_ACCOUNTS: WaiterAccount[] = [
+/** Учётная запись официанта, хранящаяся в Firebase Realtime Database */
+export interface StoredWaiterAccount extends WaiterAccount {
+  id: string;
+  createdAt: string;
+}
+
+/** Запись для отображения в админ-таблице (встроенные + зарегистрированные) */
+export interface WaiterAccountView extends WaiterAccount {
+  id: string;
+  isBuiltIn: boolean;
+  createdAt?: string;
+}
+
+export type RegisterWaiterResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Встроенные (системные) учётные записи официантов. Их нельзя удалить через интерфейс —
+ * они являются частью базовой поставки системы и используются как резервные.
+ */
+export const BUILT_IN_WAITER_ACCOUNTS: WaiterAccount[] = [
   { username: 'anna', password: 'anna2026-cafe', displayName: 'Анна Иванова' },
-  { username: 'boris', password: 'boris2026-cafe', displayName: 'Борис Петров' },
-  { username: 'elena', password: 'elena2026-cafe', displayName: 'Елена Сидорова' },
-  { username: 'dmitry', password: 'dmitry2026-cafe', displayName: 'Дмитрий Козлов' },
-  { username: 'maria', password: 'maria2026-cafe', displayName: 'Мария Новикова' },
-  { username: 'sergey', password: 'sergey2026-cafe', displayName: 'Сергей Морозов' },
-  { username: 'olga', password: 'olga2026-cafe', displayName: 'Ольга Волкова' },
-  { username: 'alexey', password: 'alexey2026-cafe', displayName: 'Алексей Соколов' },
-  { username: 'natalia', password: 'natalia2026-cafe', displayName: 'Наталья Лебедева' },
-  { username: 'ivan', password: 'ivan2026-cafe', displayName: 'Иван Кузнецов' },
+  { username: 'boris', password: 'boris2026-cafe', displayName: 'Борис Петров' }
 ];
 
 const ADMIN_PASSWORD = 'admin2026-cafe';
+const ADMIN_USERNAME = 'admin';
+const RESERVED_USERNAMES = [ADMIN_USERNAME, 'guest', 'waiter'];
 
 interface StoredAuthState {
   role: UserRole;
@@ -42,6 +59,10 @@ export class AuthStore {
   loginModalOpen = false;
   loginError: string | null = null;
   isLoading = false;
+
+  /** Учётные записи официантов, заведённые администратором (Firebase RTDB) */
+  dbWaiterAccounts: StoredWaiterAccount[] = [];
+  waiterAccountsLoading = false;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
@@ -70,6 +91,29 @@ export class AuthStore {
 
   get currentRole(): UserRole {
     return this._user.role;
+  }
+
+  /** Полный список официантов для админ-панели: встроенные + зарегистрированные в БД */
+  get waiterAccounts(): WaiterAccountView[] {
+    const builtIn: WaiterAccountView[] = BUILT_IN_WAITER_ACCOUNTS.map(account => ({
+      ...account,
+      id: `builtin-${account.username}`,
+      isBuiltIn: true,
+    }));
+
+    const stored: WaiterAccountView[] = this.dbWaiterAccounts
+      .slice()
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .map(account => ({
+        username: account.username,
+        password: account.password,
+        displayName: account.displayName,
+        id: account.id,
+        isBuiltIn: false,
+        createdAt: account.createdAt,
+      }));
+
+    return [...builtIn, ...stored];
   }
 
   canViewMenu = (): boolean => this.permissions.canViewMenu;
@@ -172,9 +216,7 @@ export class AuthStore {
           return false;
         }
 
-        const account = WAITER_ACCOUNTS.find(
-          a => a.username === username.trim() && a.password === password,
-        );
+        const account = this.findWaiterAccount(username, password);
 
         if (account) {
           this._user = {
@@ -194,7 +236,7 @@ export class AuthStore {
       if (role === 'admin' && password === ADMIN_PASSWORD) {
         this._user = {
           role: 'admin',
-          username: 'admin',
+          username: ADMIN_USERNAME,
           displayName: 'Администратор',
         };
         this.saveAuthState();
@@ -221,6 +263,124 @@ export class AuthStore {
 
   clearError = (): void => {
     this.loginError = null;
+  };
+
+  // ============================================
+  // Управление учётными записями официантов
+  // ============================================
+
+  private findWaiterAccount = (username: string, password: string): WaiterAccount | null => {
+    const normalized = username.trim().toLowerCase();
+
+    const builtIn = BUILT_IN_WAITER_ACCOUNTS.find(
+      a => a.username.toLowerCase() === normalized && a.password === password,
+    );
+    if (builtIn) return builtIn;
+
+    const stored = this.dbWaiterAccounts.find(
+      a => a.username.toLowerCase() === normalized && a.password === password,
+    );
+    return stored
+      ? { username: stored.username, password: stored.password, displayName: stored.displayName }
+      : null;
+  };
+
+  loadWaiterAccounts = async (): Promise<void> => {
+    this.waiterAccountsLoading = true;
+    try {
+      const data = await FirebaseService.getData<Record<string, StoredWaiterAccount>>(
+        WAITER_ACCOUNTS_PATH,
+      );
+      runInAction(() => {
+        this.dbWaiterAccounts = data ? Object.values(data) : [];
+        this.waiterAccountsLoading = false;
+      });
+    } catch (error) {
+      runInAction(() => {
+        this.waiterAccountsLoading = false;
+      });
+      console.error('Load waiter accounts error:', error);
+    }
+  };
+
+  registerWaiterAccount = async (data: {
+    displayName: string;
+    username: string;
+    password: string;
+  }): Promise<RegisterWaiterResult> => {
+    if (!this.isAdmin) {
+      return { ok: false, error: 'Недостаточно прав' };
+    }
+
+    const displayName = data.displayName.trim();
+    const username = data.username.trim().toLowerCase();
+    const password = data.password;
+
+    if (!displayName) return { ok: false, error: 'Введите имя сотрудника' };
+    if (!username) return { ok: false, error: 'Введите логин' };
+    if (/\s/.test(username)) return { ok: false, error: 'Логин не должен содержать пробелов' };
+    if (!password.trim()) return { ok: false, error: 'Введите пароль' };
+    if (password.length < 4) return { ok: false, error: 'Пароль должен быть не короче 4 символов' };
+
+    if (RESERVED_USERNAMES.includes(username)) {
+      return { ok: false, error: 'Этот логин зарезервирован системой, выберите другой' };
+    }
+
+    try {
+      const data = await FirebaseService.getData<Record<string, StoredWaiterAccount>>(
+        WAITER_ACCOUNTS_PATH,
+      );
+      runInAction(() => {
+        this.dbWaiterAccounts = data ? Object.values(data) : [];
+      });
+    } catch (error) {
+      console.error('Refresh waiter accounts error: ', error);
+      // Если обновить не удалось — продолжаем проверку по локальным данным.
+    }
+
+    const usernameTaken = this.waiterAccounts.some(
+      a => a.username.toLowerCase() === username,
+    );
+    if (usernameTaken) {
+      return { ok: false, error: 'Сотрудник с таким логином уже существует' };
+    }
+
+    const account: StoredWaiterAccount = {
+      id: uuidv4(),
+      username,
+      password,
+      displayName,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await FirebaseService.setData(`${WAITER_ACCOUNTS_PATH}/${account.id}`, account);
+      runInAction(() => {
+        this.dbWaiterAccounts.push(account);
+      });
+      return { ok: true };
+    } catch (error) {
+      console.error('Register waiter account error:', error);
+      return { ok: false, error: 'Не удалось сохранить сотрудника. Попробуйте ещё раз' };
+    }
+  };
+
+  deleteWaiterAccount = async (id: string): Promise<boolean> => {
+    if (!this.isAdmin) return false;
+
+    const index = this.dbWaiterAccounts.findIndex(a => a.id === id);
+    if (index === -1) return false;
+
+    try {
+      await FirebaseService.removeData(`${WAITER_ACCOUNTS_PATH}/${id}`);
+      runInAction(() => {
+        this.dbWaiterAccounts.splice(index, 1);
+      });
+      return true;
+    } catch (error) {
+      console.error('Delete waiter account error:', error);
+      return false;
+    }
   };
 }
 

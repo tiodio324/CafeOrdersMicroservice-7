@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { dataStore, navigationStore } from '@/store';
-import { Card, Button, Input, Select, Modal, Table } from '@/components/UI';
+import { dataStore, navigationStore, authStore } from '@/store';
+import { WaiterAccountView } from '@/store/AuthStore';
+import { Card, Button, Input, Select, Modal, Table, Badge } from '@/components/UI';
 import {
   Category,
   CategoryFormData,
@@ -19,8 +20,14 @@ import {
   validateTableForm,
 } from '@/utils/validators';
 
-type AdminTab = 'menu' | 'categories' | 'tables';
-type ModalType = 'category' | 'menu' | 'table' | null;
+type AdminTab = 'menu' | 'categories' | 'tables' | 'employees';
+type ModalType = 'category' | 'menu' | 'table' | 'employee' | null;
+
+interface EmployeeFormData {
+  displayName: string;
+  username: string;
+  password: string;
+}
 
 const TABLE_STATUS_OPTIONS: Array<{ value: TableStatus; label: string }> = [
   { value: 'free', label: 'Свободен' },
@@ -48,10 +55,13 @@ export const AdminPage = observer(() => {
     getCategoryById,
   } = dataStore;
 
+  const { waiterAccounts, registerWaiterAccount, deleteWaiterAccount } = authStore;
+
   const getInitialTab = (): AdminTab => {
     if (currentPage === 'admin-menu') return 'menu';
     if (currentPage === 'admin-categories') return 'categories';
     if (currentPage === 'admin-tables') return 'tables';
+    if (currentPage === 'admin-employees') return 'employees';
     return 'menu';
   };
 
@@ -81,9 +91,17 @@ export const AdminPage = observer(() => {
     location: '',
   });
 
+  const [employeeForm, setEmployeeForm] = useState<EmployeeFormData>({
+    displayName: '',
+    username: '',
+    password: '',
+  });
+  const [employeeSubmitting, setEmployeeSubmitting] = useState(false);
+
   const [categoryErrors, setCategoryErrors] = useState<Record<string, string>>({});
   const [menuErrors, setMenuErrors] = useState<Record<string, string>>({});
   const [tableErrors, setTableErrors] = useState<Record<string, string>>({});
+  const [employeeErrors, setEmployeeErrors] = useState<Record<string, string>>({});
 
   const closeModal = () => {
     setModalType(null);
@@ -93,6 +111,7 @@ export const AdminPage = observer(() => {
     setCategoryErrors({});
     setMenuErrors({});
     setTableErrors({});
+    setEmployeeErrors({});
   };
 
   const handleOpenCategoryModal = (category?: Category) => {
@@ -214,6 +233,42 @@ export const AdminPage = observer(() => {
     }
   };
 
+  const handleOpenEmployeeModal = () => {
+    setEmployeeForm({ displayName: '', username: '', password: '' });
+    setEmployeeErrors({});
+    setModalType('employee');
+  };
+
+  const handleSubmitEmployee = async () => {
+    const errors: Record<string, string> = {};
+    if (!employeeForm.displayName.trim()) errors.displayName = 'Введите имя сотрудника';
+    if (!employeeForm.username.trim()) errors.username = 'Введите логин';
+    if (!employeeForm.password.trim()) errors.password = 'Введите пароль';
+
+    if (Object.keys(errors).length > 0) {
+      setEmployeeErrors(errors);
+      return;
+    }
+
+    setEmployeeErrors({});
+    setEmployeeSubmitting(true);
+    const result = await registerWaiterAccount(employeeForm);
+    setEmployeeSubmitting(false);
+
+    if (result.ok) {
+      closeModal();
+    } else {
+      setEmployeeErrors({ form: result.error });
+    }
+  };
+
+  const handleDeleteEmployee = async (account: WaiterAccountView) => {
+    if (account.isBuiltIn) return;
+    if (confirm(`Удалить сотрудника «${account.displayName}»? Учётная запись будет деактивирована безвозвратно.`)) {
+      await deleteWaiterAccount(account.id);
+    }
+  };
+
   const handleDeleteCategory = async (id: string) => {
     if (confirm('Вы уверены, что хотите удалить эту категорию?')) {
       await deleteCategory(id);
@@ -237,7 +292,6 @@ export const AdminPage = observer(() => {
     { key: 'categoryId', title: 'Категория', render: (item: MenuItem) => getCategoryById(item.categoryId)?.name || '-' },
     { key: 'price', title: 'Цена', render: (item: MenuItem) => `${item.price} ₽` },
     { key: 'isAvailable', title: 'Доступно', render: (item: MenuItem) => item.isAvailable ? 'Да' : 'Нет' },
-    { key: 'isActive', title: 'Активно', render: (item: MenuItem) => item.isActive ? 'Да' : 'Нет' },
     {
       key: 'actions',
       title: 'Действия',
@@ -258,7 +312,6 @@ export const AdminPage = observer(() => {
     { key: 'name', title: 'Название' },
     { key: 'description', title: 'Описание', render: (cat: Category) => cat.description || '-' },
     { key: 'sortOrder', title: 'Порядок' },
-    { key: 'isActive', title: 'Активно', render: (cat: Category) => cat.isActive ? 'Да' : 'Нет' },
     {
       key: 'actions',
       title: 'Действия',
@@ -280,7 +333,6 @@ export const AdminPage = observer(() => {
     { key: 'capacity', title: 'Вместимость', render: (t: TableType) => `${t.capacity} мест` },
     { key: 'status', title: 'Статус', render: (t: TableType) => getTableStatusLabel(t.status) },
     { key: 'location', title: 'Расположение', render: (t: TableType) => t.location || '-' },
-    { key: 'isActive', title: 'Активно', render: (t: TableType) => t.isActive ? 'Да' : 'Нет' },
     {
       key: 'actions',
       title: 'Действия',
@@ -294,6 +346,46 @@ export const AdminPage = observer(() => {
           </Button>
         </div>
       ),
+    },
+  ];
+
+  const employeeColumns = [
+    { key: 'displayName', title: 'Имя' },
+    {
+      key: 'username',
+      title: 'Логин',
+      render: (account: WaiterAccountView) => <code className={styles.code}>{account.username}</code>,
+    },
+    {
+      key: 'password',
+      title: 'Пароль',
+      render: (account: WaiterAccountView) => <code className={styles.code}>{account.password}</code>,
+    },
+    {
+      key: 'type',
+      title: 'Тип учётной записи',
+      render: (account: WaiterAccountView) =>
+        account.isBuiltIn ? (
+          <Badge variant="info">Встроенная</Badge>
+        ) : (
+          <Badge variant="success">Зарегистрирована</Badge>
+        ),
+    },
+    {
+      key: 'actions',
+      title: 'Действия',
+      render: (account: WaiterAccountView) =>
+        account.isBuiltIn ? (
+          <span className={styles.mutedNote} title="Системная учётная запись, входит в базовую поставку системы">
+            Системный аккаунт
+          </span>
+        ) : (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button size="sm" variant="danger" onClick={() => handleDeleteEmployee(account)}>
+              Удалить
+            </Button>
+          </div>
+        ),
     },
   ];
 
@@ -322,6 +414,12 @@ export const AdminPage = observer(() => {
         >
           Столики ({tables.filter(t => t.isActive).length})
         </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'employees' ? styles.active : ''}`}
+          onClick={() => setActiveTab('employees')}
+        >
+          Сотрудники ({waiterAccounts.length})
+        </button>
       </div>
 
       {activeTab === 'menu' && (
@@ -334,8 +432,9 @@ export const AdminPage = observer(() => {
           <Card className={styles.tableCard}>
             <Table
               columns={menuColumns}
-              data={menuItems}
+              data={menuItems.filter(m => m.isActive)}
               keyField="id"
+              emptyText="Позиции меню пока не добавлены"
             />
           </Card>
         </>
@@ -351,8 +450,9 @@ export const AdminPage = observer(() => {
           <Card className={styles.tableCard}>
             <Table
               columns={categoryColumns}
-              data={categories}
+              data={activeCategories}
               keyField="id"
+              emptyText="Категории пока не добавлены"
             />
           </Card>
         </>
@@ -368,10 +468,33 @@ export const AdminPage = observer(() => {
           <Card className={styles.tableCard}>
             <Table
               columns={tableColumns}
-              data={tables}
+              data={tables.filter(t => t.isActive)}
               keyField="id"
+              emptyText="Столики пока не добавлены"
             />
           </Card>
+        </>
+      )}
+
+      {activeTab === 'employees' && (
+        <>
+          <div className={styles.actions}>
+            <Button variant="primary" onClick={handleOpenEmployeeModal}>
+              Новый сотрудник
+            </Button>
+          </div>
+          <Card className={styles.tableCard}>
+            <Table
+              columns={employeeColumns}
+              data={waiterAccounts}
+              keyField="id"
+              loading={authStore.waiterAccountsLoading}
+              emptyText="Сотрудники пока не добавлены"
+            />
+          </Card>
+          <p className={styles.hintText}>
+            Встроенные учётные записи входят в базовую поставку системы и не могут быть удалены.
+          </p>
         </>
       )}
 
@@ -527,6 +650,69 @@ export const AdminPage = observer(() => {
             </Button>
             <Button variant="primary" onClick={handleSubmitTable}>
               {editingTable ? 'Сохранить' : 'Добавить'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={modalType === 'employee'}
+        onClose={closeModal}
+        title="Регистрация нового сотрудника"
+      >
+        <div className={styles.form}>
+          <p className={styles.modalIntro}>
+            Заполните данные сотрудника. Учётная запись будет создана в системе,
+            после чего официант сможет входить под выданными логином и паролем.
+          </p>
+          <Input
+            label="Имя"
+            value={employeeForm.displayName}
+            onChange={(e) => {
+              setEmployeeForm({ ...employeeForm, displayName: e.target.value });
+              if (employeeErrors.displayName || employeeErrors.form) {
+                setEmployeeErrors({ ...employeeErrors, displayName: '', form: '' });
+              }
+            }}
+            error={employeeErrors.displayName}
+            placeholder="Например: Мария Сидорова"
+            required
+          />
+          <Input
+            label="Логин"
+            value={employeeForm.username}
+            onChange={(e) => {
+              setEmployeeForm({ ...employeeForm, username: e.target.value });
+              if (employeeErrors.username || employeeErrors.form) {
+                setEmployeeErrors({ ...employeeErrors, username: '', form: '' });
+              }
+            }}
+            error={employeeErrors.username}
+            placeholder="Например: maria"
+            autoComplete="off"
+            required
+          />
+          <Input
+            label="Пароль"
+            value={employeeForm.password}
+            onChange={(e) => {
+              setEmployeeForm({ ...employeeForm, password: e.target.value });
+              if (employeeErrors.password || employeeErrors.form) {
+                setEmployeeErrors({ ...employeeErrors, password: '', form: '' });
+              }
+            }}
+            error={employeeErrors.password}
+            placeholder="Минимум 4 символа"
+            autoComplete="new-password"
+            required
+          />
+          {employeeErrors.form && <p className={styles.formError}>{employeeErrors.form}</p>}
+          <div className={styles.formActions}>
+            <Button variant="secondary" onClick={closeModal} disabled={employeeSubmitting}>
+              Отмена
+            </Button>
+            <Button variant="primary" onClick={handleSubmitEmployee} disabled={employeeSubmitting}>
+              {employeeSubmitting ? 'Регистрация...' : 'Зарегистрировать'}
             </Button>
           </div>
         </div>

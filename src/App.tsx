@@ -24,7 +24,8 @@ const PageRouter = observer(() => {
   const isAdminPage = currentPage === 'admin'
     || currentPage === 'admin-menu'
     || currentPage === 'admin-categories'
-    || currentPage === 'admin-tables';
+    || currentPage === 'admin-tables'
+    || currentPage === 'admin-employees';
 
   if (isAdminPage && !canAccessAdmin()) {
     return <HomePage />;
@@ -47,6 +48,7 @@ const PageRouter = observer(() => {
     case 'admin-menu':
     case 'admin-categories':
     case 'admin-tables':
+    case 'admin-employees':
       return <AdminPage />;
     default:
       return <HomePage />;
@@ -56,6 +58,7 @@ const PageRouter = observer(() => {
 const App = observer(() => {
   useEffect(() => {
     dataStore.loadAllData();
+    authStore.loadWaiterAccounts();
   }, []);
 
   return (
